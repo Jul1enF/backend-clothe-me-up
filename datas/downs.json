@@ -1,0 +1,135 @@
+[
+    {
+        "name" : "Pantalon 1",
+        "stocks" : [
+            {"size" : "S",
+            "stock" : 2 },
+            {"size" : "M",
+            "stock" : 4},
+            {"size" : "L",
+            "stock" : 1},
+            {"size" : "XL",
+            "stock" : 0},
+            {"size" : "XXL",
+            "stock" : 0}
+        ],
+        "imgUrl" : "/Pants/Pants1.png",
+        "price" : 0.10,
+        "arrivalDate" : "Tue Aug 20 2024 01:39:11 GMT+0200 (heure d’été d’Europe centrale)",
+        "description":"Un pantalon très agréable à porter. Fabriqué entièrement en tissu et idéal pour toutes les saisons. La coupe est parfaitement ajustée pour un style à la fois décontracté et sérieux."
+    },
+    {
+        "name" : "Pantalon 2",
+        "stocks" : [
+            {"size" : "S",
+            "stock" : 0 },
+            {"size" : "M",
+            "stock" : 1},
+            {"size" : "L",
+            "stock" : 6},
+            {"size" : "XL",
+            "stock" : 0},
+            {"size" : "XXL",
+            "stock" : 1}
+        ],
+        "imgUrl" : "/Pants/Pants2.png",
+        "price" : 0.15,
+        "arrivalDate" : "Tue Aug 20 2024 01:43:02 GMT+0200 (heure d’été d’Europe centrale)",
+        "description":"Un pantalon très agréable à porter. Fabriqué entièrement en tissu et idéal pour toutes les saisons. La coupe est parfaitement ajustée pour un style à la fois décontracté et sérieux."
+    },
+    {
+        "name" : "Pantalon 3",
+        "stocks" : [
+            {"size" : "S",
+            "stock" : 7 },
+            {"size" : "M",
+            "stock" : 6},
+            {"size" : "L",
+            "stock" : 2},
+            {"size" : "XL",
+            "stock" : 3},
+            {"size" : "XXL",
+            "stock" : 0}
+        ],
+        "imgUrl" : "/Pants/Pants3.png",
+        "price" : 0.30,
+        "arrivalDate" : "Tue Aug 20 2024 02:23:02 GMT+0200 (heure d’été d’Europe centrale)",
+        "description":"Un pantalon très agréable à porter. Fabriqué entièrement en tissu et idéal pour toutes les saisons. La coupe est parfaitement ajustée pour un style à la fois décontracté et sérieux."
+    },
+    {
+        "name" : "Pantalon 4",
+        "stocks" : [
+            {"size" : "S",
+            "stock" : 3 },
+            {"size" : "M",
+            "stock" : 1},
+            {"size" : "L",
+            "stock" : 2},
+            {"size" : "XL",
+            "stock" : 1},
+            {"size" : "XXL",
+            "stock" : 2}
+        ],
+        "imgUrl" : "/Pants/Pants4.png",
+        "price" : 0.16,
+        "arrivalDate" : "Tue Aug 20 2024 03:43:02 GMT+0200 (heure d’été d’Europe centrale)",
+        "description":"Un pantalon très agréable à porter. Fabriqué entièrement en tissu et idéal pour toutes les saisons. La coupe est parfaitement ajustée pour un style à la fois décontracté et sérieux."
+    },
+    {
+        "name" : "Pantalon 5",
+        "stocks" : [
+            {"size" : "S",
+            "stock" : 0 },
+            {"size" : "M",
+            "stock" : 1},
+            {"size" : "L",
+            "stock" : 0},
+            {"size" : "XL",
+            "stock" : 1},
+            {"size" : "XXL",
+            "stock" : 1}
+        ],
+        "imgUrl" : "/Pants/Pants5.png",
+        "price" : 0.20,
+        "arrivalDate" : "Tue Aug 20 2024 03:53:02 GMT+0200 (heure d’été d’Europe centrale)",
+        "description":"Un pantalon très agréable à porter. Fabriqué entièrement en tissu et idéal pour toutes les saisons. La coupe est parfaitement ajustée pour un style à la fois décontracté et sérieux."
+    },
+    {
+        "name" : "Pantalon 6",
+        "stocks" : [
+            {"size" : "S",
+            "stock" : 3 },
+            {"size" : "M",
+            "stock" : 0},
+            {"size" : "L",
+            "stock" : 6},
+            {"size" : "XL",
+            "stock" : 0},
+            {"size" : "XXL",
+            "stock" : 1}
+        ],
+        "imgUrl" : "/Pants/Pants6.png",
+        "price" : 0.25,
+        "arrivalDate" : "Tue Aug 20 2024 04:43:02 GMT+0200 (heure d’été d’Europe centrale)",
+        "description":"Un pantalon très agréable à porter. Fabriqué entièrement en tissu et idéal pour toutes les saisons. La coupe est parfaitement ajustée pour un style à la fois décontracté et sérieux."
+    },
+    {
+        "name" : "Pantalon 7",
+        "stocks" : [
+            {"size" : "S",
+            "stock" : 0},
+            {"size" : "M",
+            "stock" : 0},
+            {"size" : "L",
+            "stock" : 2},
+            {"size" : "XL",
+            "stock" : 0},
+            {"size" : "XXL",
+            "stock" : 4}
+        ],
+        "imgUrl" : "/Pants/Pants7.png",
+        "price" : 0.15,
+        "arrivalDate" : "Tue Aug 20 2024 06:43:02 GMT+0200 (heure d’été d’Europe centrale)",
+        "description":"Un pantalon très agréable à porter. Fabriqué entièrement en tissu et idéal pour toutes les saisons. La coupe est parfaitement ajustée pour un style à la fois décontracté et sérieux."
+    }
+]
