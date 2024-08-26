@@ -1,16 +1,18 @@
 const mongoose = require('mongoose')
 
-const stockSchema = mongoose.Schema({
-    size : String,
-    stock : Number,
-})
+// const stockSchema = mongoose.Schema({
+//     size : String,
+//     stock : Number,
+// })
 
 const pantSchema = mongoose.Schema({
     name : String,
-    stocks : [stockSchema],
+    size : String,
     imgUrl : String,
     price : Number,
-    arrivalDate : Date,
+    category :String,
+    description: String,
+    arrival_date : Date,
 })
 
 const Pant = mongoose.model('pants', pantSchema)

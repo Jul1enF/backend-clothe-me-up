@@ -178,7 +178,7 @@ router.put('/signin', async (req, res) => {
                 token,
             }, secretToken, { expiresIn: '2h' })
 
-            res.json({ result: true, token: jwtToken, firstname: data.firstname })
+            res.json({ result: true, token: jwtToken, firstname: data.firstname, is_admin : data.is_admin })
         }
         // Si l'adresse mail n'a pas été vérifiée
         else if (data && bcrypt.compareSync(password, data.password)) {

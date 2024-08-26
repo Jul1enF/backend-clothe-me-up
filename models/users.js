@@ -19,6 +19,7 @@ const userSchema = mongoose.Schema({
     adresses : [adressSchema],
     inscription_date :Date,
     is_verified : Boolean,
+    is_admin : {type : Boolean, default : false},
     token : String,
 })
 
