@@ -1,11 +1,29 @@
 var express = require('express');
 var router = express.Router();
 const Pant =require("../models/pants")
+const User= require("../models/users")
+const jwt = require('jsonwebtoken')
+
+const secretToken = process.env.SECRET_TOKEN
 
 router.post('/addArticles', async (req, res)=>{
-  const {name, imgUrl, price, description, category, size1, stock1, size2, stock2, size3, stock3, size4, stock4, size5, stock5, size6, stock6, size7, stock7, size8, stock8} = req.body
+  const {jwtToken, name, imgUrl, price, description, category, size1, stock1, size2, stock2, size3, stock3, size4, stock4, size5, stock5, size6, stock6, size7, stock7, size8, stock8} = req.body
 
   try{
+    // Vérification du token
+    if (!jwtToken){
+      res.json({result : false, error:"Utilisateur non connecté !"})
+      return
+    }
+    if (jwtToken){
+      const decryptedToken = jwt.verify(jwtToken, secretToken)
+      const token = decryptedToken.token
+      const user = await User.findOne({token})
+      if (!user.is_admin){
+        res.json({result : false, error:"Utilisateur non habilité à poster !"})
+        return
+      }
+    }
 
     // Enregistrement de la catégorie pants
 

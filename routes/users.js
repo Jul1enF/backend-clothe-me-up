@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 
 var User = require('../models/users')
+const CartPant = require('../models/cart_pants')
 const { checkBody } = require('../modules/checkBody')
 const uid2 = require('uid2')
 const bcrypt = require('bcrypt')
@@ -107,7 +108,7 @@ router.post('/signup', async (req, res) => {
 
 router.put('/verification', async (req, res) => {
     try {
-        const { email, jwtToken } = req.body
+        const { email, jwtToken, pantsNotLinked, topsNotLinked } = req.body
         const decryptedToken = jwt.verify(jwtToken, secretToken)
 
         if (!decryptedToken) {
@@ -126,13 +127,34 @@ router.put('/verification', async (req, res) => {
             const data = await User.findOne({ token: decryptedToken.token })
 
             data.is_verified = true
+
+
             await data.save()
 
             const jwtToken = jwt.sign({
                 token: data.token,
             }, secretToken, { expiresIn: '2h' })
 
-            res.json({ result: true, token: jwtToken, firstname: data.firstname })
+            // Ajout d'articles présents dans le panier et non enregistrés
+            if (pantsNotLinked.length > 0) {
+                data.cart_pants = [...data.cart_pants, ...pantsNotLinked]
+            }
+            if (topsNotLinked.length > 0) {
+                data.cart_tops = [...data.cart_tops, ...topsNotLinked]
+            }
+
+            // Vérif dispo articles du panier
+            for (let pant of data.cart_pants) {
+                const answer = await CartPant.findById(pant)
+
+                if (answer == null) { data.cart_pants = data.cart_pants.filter(e => e !== pant) }
+            }
+
+            const newData = await data.save()
+            await newData.populate('cart_pants')
+
+            res.json({ result: true, token: jwtToken, firstname: newData.firstname, is_admin: newData.is_admin, cart_pants: newData.cart_pants, cart_tops: newData.cart_tops })
+
         }
     }
     catch (error) {
@@ -158,7 +180,7 @@ router.put('/verification', async (req, res) => {
 // Route signin
 
 router.put('/signin', async (req, res) => {
-    const { email, password } = req.body
+    const { email, password, pantsNotLinked, topsNotLinked } = req.body
 
     if (!checkBody(req.body, ['email', 'password'])) {
         res.json({
@@ -170,15 +192,34 @@ router.put('/signin', async (req, res) => {
         const data = await User.findOne({ email })
         if (data && bcrypt.compareSync(password, data.password) && data.is_verified) {
             const token = uid2(32)
-
             data.token = token
-            await data.save()
+
+            // Ajout d'articles présents dans le panier et non enregistrés
+
+            if (pantsNotLinked.length > 0) {
+                data.cart_pants = [...data.cart_pants, ...pantsNotLinked]
+            }
+            if (topsNotLinked.length > 0) {
+                data.cart_tops = [...data.cart_tops, ...topsNotLinked]
+            }
+
+            // Vérif dispo articles du panier
+            for (let pant of data.cart_pants) {
+                const answer = await CartPant.findById(pant)
+
+                if (answer == null) { data.cart_pants = data.cart_pants.filter(e => e !== pant) }
+            }
+
+            const newData = await data.save()
+            await newData.populate('cart_pants')
+
+            //Renvoi des infos utiles au réducer
 
             const jwtToken = jwt.sign({
                 token,
             }, secretToken, { expiresIn: '2h' })
 
-            res.json({ result: true, token: jwtToken, firstname: data.firstname, is_admin : data.is_admin })
+            res.json({ result: true, token: jwtToken, firstname: newData.firstname, is_admin: newData.is_admin, cart_pants: newData.cart_pants, cart_tops: newData.cart_tops })
         }
         // Si l'adresse mail n'a pas été vérifiée
         else if (data && bcrypt.compareSync(password, data.password)) {
@@ -237,7 +278,7 @@ router.post('/google', async (req, res) => {
 })
 
 
-// Route pour obtenir les infos du user (redirectUrl)
+// redirectUrl : Route pour obtenir les infos du user
 
 router.get('/google/auth', async (req, res) => {
 
@@ -264,7 +305,7 @@ router.get('/google/auth', async (req, res) => {
         const response = await fetch(`https://www.googleapis.com/oauth2/v3/userinfo`,
             {
                 headers: {
-                  Authorization: `Bearer ${user.access_token}`
+                    Authorization: `Bearer ${user.access_token}`
                 }
             }
         )
@@ -272,20 +313,23 @@ router.get('/google/auth', async (req, res) => {
         console.log('data', data)
 
         let name
-        if (data.family_name){name = data.family_name}
-        const {email} =data
+        if (data.family_name) { name = data.family_name }
+
+        const { email } = data
         const firstname = data.given_name
         const token = uid2(32)
         const jwtToken = jwt.sign({
             token,
         }, secretToken, { expiresIn: '2h' })
 
-        const result = await User.findOne({email})
-        if (result){
+        const result = await User.findOne({ email })
+        // Si l'utilisateur se connecte
+        if (result) {
             result.token = token
             await result.save()
         }
-        else{
+        // Si l'utilisateur s'inscrit
+        else {
             const newUser = new User({
                 firstname,
                 name,
@@ -297,10 +341,40 @@ router.get('/google/auth', async (req, res) => {
             await newUser.save()
         }
 
-        res.redirect(`${frontAddress}/home/${data.given_name}/${jwtToken}`)
+        res.redirect(`${frontAddress}/home/${jwtToken}`)
 
 
     } catch (error) { console.log(error) }
+})
+
+router.put('/googleUserInfos', async (req, res) => {
+    const { jwtToken, pantsNotLinked, topsNotLinked } = req.body
+
+    try {
+        const decryptedToken = jwt.verify(jwtToken, secretToken)
+        const data = await User.findOne({ token: decryptedToken.token })
+
+        // Ajout d'articles présents dans le panier et non enregistrés
+        if (pantsNotLinked.length > 0) {
+            data.cart_pants = [...data.cart_pants, ...pantsNotLinked]
+        }
+        if (topsNotLinked.length > 0) {
+            data.cart_tops = [...data.cart_tops, ...topsNotLinked]
+        }
+
+        // Vérif dispo articles du panier
+        for (let pant of data.cart_pants) {
+            const answer = await CartPant.findById(pant)
+
+            if (answer == null) { data.cart_pants = data.cart_pants.filter(e => e !== pant) }
+        }
+
+        const newData = await data.save()
+        await newData.populate('cart_pants')
+
+        res.json({ result: true, token: jwtToken, firstname: newData.firstname, is_admin: newData.is_admin, cart_pants: newData.cart_pants, cart_tops: newData.cart_tops })
+
+    } catch (error) { res.json({ result: false, error }) }
 })
 
 module.exports = router;

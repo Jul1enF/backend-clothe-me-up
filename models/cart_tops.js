@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const pantSchema = mongoose.Schema({
+const cartTopSchema = mongoose.Schema({
     name : String,
     size : String,
     imgUrl : String,
@@ -8,7 +8,9 @@ const pantSchema = mongoose.Schema({
     category :String,
     description: String,
     arrival_date : Date,
+    createdAt : Date,
+    
 })
 
-const Pant = mongoose.model('pants', pantSchema)
-module.exports = Pant
+const CartTop = mongoose.model('cart_tops', cartTopSchema)
+module.exports = CartTop
