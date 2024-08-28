@@ -46,6 +46,8 @@ router.put('/addCartPant', async(req, res)=>{
 
     const cartPantSaved = await newCartPant.save()
 
+     // Enregistrement en bdd si token (user connecté)
+
     if(jwtToken){
       const decryptedToken=jwt.verify(jwtToken, secretToken)
 

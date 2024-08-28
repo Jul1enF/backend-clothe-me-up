@@ -3,6 +3,7 @@ var router = express.Router();
 
 var User = require('../models/users')
 const CartPant = require('../models/cart_pants')
+const CartTop= require("../models/cart_tops")
 const { checkBody } = require('../modules/checkBody')
 const uid2 = require('uid2')
 const bcrypt = require('bcrypt')
@@ -145,13 +146,21 @@ router.put('/verification', async (req, res) => {
 
             // Vérif dispo articles du panier
             for (let pant of data.cart_pants) {
-                const answer = await CartPant.findById(pant)
+                const answer = await CartPant.findOne({_id : pant})
 
                 if (answer == null) { data.cart_pants = data.cart_pants.filter(e => e !== pant) }
             }
 
+            for (let top of data.cart_tops) {
+                const answer = await CartTop.findOne({_id : top})
+
+    
+                if (answer == null) { data.cart_tops = data.cart_tops.filter(e => e !== top) }
+            }
+    
             const newData = await data.save()
             await newData.populate('cart_pants')
+            await newData.populate('cart_tops')
 
             res.json({ result: true, token: jwtToken, firstname: newData.firstname, is_admin: newData.is_admin, cart_pants: newData.cart_pants, cart_tops: newData.cart_tops })
 
@@ -205,13 +214,22 @@ router.put('/signin', async (req, res) => {
 
             // Vérif dispo articles du panier
             for (let pant of data.cart_pants) {
-                const answer = await CartPant.findById(pant)
+                const answer = await CartPant.findOne({_id : pant})
+
 
                 if (answer == null) { data.cart_pants = data.cart_pants.filter(e => e !== pant) }
             }
 
+            for (let top of data.cart_tops) {
+                const answer = await CartTop.findOne({_id : top})
+
+    
+                if (answer == null) { data.cart_tops = data.cart_tops.filter(e => e !== top) }
+            }
+
             const newData = await data.save()
             await newData.populate('cart_pants')
+            await newData.populate('cart_tops')
 
             //Renvoi des infos utiles au réducer
 
@@ -364,13 +382,20 @@ router.put('/googleUserInfos', async (req, res) => {
 
         // Vérif dispo articles du panier
         for (let pant of data.cart_pants) {
-            const answer = await CartPant.findById(pant)
+            const answer = await CartPant.findOne({_id : pant})
 
             if (answer == null) { data.cart_pants = data.cart_pants.filter(e => e !== pant) }
         }
 
+        for (let top of data.cart_tops) {
+            const answer = await CartTop.findOne({_id : top})
+
+            if (answer == null) { data.cart_tops = data.cart_tops.filter(e => e !== top) }
+        }
+
         const newData = await data.save()
         await newData.populate('cart_pants')
+        await newData.populate('cart_tops')
 
         res.json({ result: true, token: jwtToken, firstname: newData.firstname, is_admin: newData.is_admin, cart_pants: newData.cart_pants, cart_tops: newData.cart_tops })
 
