@@ -259,7 +259,7 @@ router.put('/googleUserInfos', async (req, res) => {
         await newData.populate('cart_pants')
         await newData.populate('cart_tops')
 
-        res.json({ result: true, token: jwtToken, firstname: newData.firstname, is_admin: newData.is_admin, cart_pants: newData.cart_pants, cart_tops: newData.cart_tops, change })
+        res.json({ result: true, token: jwtToken, firstname: newData.firstname, is_admin: newData.is_admin, cart_pants: newData.cart_pants, cart_tops: newData.cart_tops, change, addresses : newData.addresses })
 
     } catch (error) { res.json({ result: false, error }) }
 })

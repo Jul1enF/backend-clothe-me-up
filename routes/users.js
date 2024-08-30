@@ -61,6 +61,8 @@ router.post('/signup', async (req, res) => {
 
     const { firstname, name, email, password, mobile_phone } = req.body
 
+    try{
+
     if (!checkBody(req.body, ['firstname', 'name', 'email', 'password', 'mobile_phone'])) {
         res.json({
             result: false,
@@ -103,6 +105,7 @@ router.post('/signup', async (req, res) => {
             res.json({ result: true })
         }
     }
+    }catch(error){res.json({error})}
 })
 
 // Route de vérification de l'email
@@ -162,7 +165,7 @@ router.put('/verification', async (req, res) => {
             await newData.populate('cart_pants')
             await newData.populate('cart_tops')
 
-            res.json({ result: true, token: jwtToken, firstname: newData.firstname, is_admin: newData.is_admin, cart_pants: newData.cart_pants, cart_tops: newData.cart_tops })
+            res.json({ result: true, token: jwtToken, firstname: newData.firstname, is_admin: newData.is_admin, cart_pants: newData.cart_pants, cart_tops: newData.cart_tops, addresses : newData.addresses })
 
         }
     }
@@ -191,77 +194,78 @@ router.put('/verification', async (req, res) => {
 router.put('/signin', async (req, res) => {
     const { email, password, pantsNotLinked, topsNotLinked } = req.body
 
-    if (!checkBody(req.body, ['email', 'password'])) {
-        res.json({
-            result: false,
-            error: 'Informations manquantes.'
-        })
-    }
-    else {
-        const data = await User.findOne({ email })
-        if (data && bcrypt.compareSync(password, data.password) && data.is_verified) {
-            const token = uid2(32)
-            data.token = token
-
-            // Ajout d'articles présents dans le panier et non enregistrés
-
-            if (pantsNotLinked.length > 0) {
-                data.cart_pants = [...data.cart_pants, ...pantsNotLinked]
-            }
-            if (topsNotLinked.length > 0) {
-                data.cart_tops = [...data.cart_tops, ...topsNotLinked]
-            }
-
-            // Vérif dispo articles du panier
-            for (let pant of data.cart_pants) {
-                const answer = await CartPant.findOne({_id : pant})
-
-
-                if (answer == null) { data.cart_pants = data.cart_pants.filter(e => e !== pant) }
-            }
-
-            for (let top of data.cart_tops) {
-                const answer = await CartTop.findOne({_id : top})
-
-    
-                if (answer == null) { data.cart_tops = data.cart_tops.filter(e => e !== top) }
-            }
-
-            const newData = await data.save()
-            await newData.populate('cart_pants')
-            await newData.populate('cart_tops')
-
-            //Renvoi des infos utiles au réducer
-
-            const jwtToken = jwt.sign({
-                token,
-            }, secretToken, { expiresIn: '2h' })
-
-            res.json({ result: true, token: jwtToken, firstname: newData.firstname, is_admin: newData.is_admin, cart_pants: newData.cart_pants, cart_tops: newData.cart_tops })
-        }
-        // Si l'adresse mail n'a pas été vérifiée
-        else if (data && bcrypt.compareSync(password, data.password)) {
-
-            const newJwtToken = jwt.sign({
-                token: data.token,
-            }, secretToken, { expiresIn: '1h' })
-
-            await emailTransporter.sendMail(checkMail(newJwtToken, email, data.firstname))
-
+    try{
+        if (!checkBody(req.body, ['email', 'password'])) {
             res.json({
                 result: false,
-                error: 'Adresse mail non confirmée ! Un nouvel email de vérification vous a été envoyé.'
+                error: 'Informations manquantes.'
             })
         }
         else {
-            res.json({
-                result: false,
-                error: 'Email ou mot de passe incorrect.'
-            })
+            const data = await User.findOne({ email })
+            if (data && bcrypt.compareSync(password, data.password) && data.is_verified) {
+                const token = uid2(32)
+                data.token = token
+    
+                // Ajout d'articles présents dans le panier et non enregistrés
+    
+                if (pantsNotLinked.length > 0) {
+                    data.cart_pants = [...data.cart_pants, ...pantsNotLinked]
+                }
+                if (topsNotLinked.length > 0) {
+                    data.cart_tops = [...data.cart_tops, ...topsNotLinked]
+                }
+    
+                // Vérif dispo articles du panier
+                for (let pant of data.cart_pants) {
+                    const answer = await CartPant.findOne({_id : pant})
+    
+    
+                    if (answer == null) { data.cart_pants = data.cart_pants.filter(e => e !== pant) }
+                }
+    
+                for (let top of data.cart_tops) {
+                    const answer = await CartTop.findOne({_id : top})
+    
+        
+                    if (answer == null) { data.cart_tops = data.cart_tops.filter(e => e !== top) }
+                }
+    
+                const newData = await data.save()
+                await newData.populate('cart_pants')
+                await newData.populate('cart_tops')
+    
+                //Renvoi des infos utiles au réducer
+    
+                const jwtToken = jwt.sign({
+                    token,
+                }, secretToken, { expiresIn: '2h' })
+    
+                res.json({ result: true, token: jwtToken, firstname: newData.firstname, is_admin: newData.is_admin, cart_pants: newData.cart_pants, cart_tops: newData.cart_tops, addresses : newData.addresses})
+            }
+            // Si l'adresse mail n'a pas été vérifiée
+            else if (data && bcrypt.compareSync(password, data.password)) {
+    
+                const newJwtToken = jwt.sign({
+                    token: data.token,
+                }, secretToken, { expiresIn: '1h' })
+    
+                await emailTransporter.sendMail(checkMail(newJwtToken, email, data.firstname))
+    
+                res.json({
+                    result: false,
+                    error: 'Adresse mail non confirmée ! Un nouvel email de vérification vous a été envoyé.'
+                })
+            }
+            else {
+                res.json({
+                    result: false,
+                    error: 'Email ou mot de passe incorrect.'
+                })
+            }
+    
         }
-
-    }
-
+    }catch(error){res.json({error})}
 })
 
 
@@ -271,28 +275,30 @@ router.put('/signin', async (req, res) => {
 // 1ère route pour avoir une url de connexion google
 
 router.post('/google', async (req, res) => {
-    res.header('Access-Control-Allow-Origin', `${frontAddress}`)
+    try{
+        res.header('Access-Control-Allow-Origin', `${frontAddress}`)
 
-    // Pour autoriser l'utilisation de http ou lieu de https
-    res.header('Referrer-Policy', 'no-referrer-when-downgrade')
-
-    const redirectUrl = `${backAddress}/users/google/auth`
-
-    const oAuth2Client = new OAuth2Client(
-        googleId,
-        googleSecret,
-        redirectUrl,
-    )
-
-    const authorizeUrl = oAuth2Client.generateAuthUrl({
-
-        // Pour avoir un nouveau token à chaque fois
-        access_type: 'offline',
-        scope: 'https://www.googleapis.com/auth/userinfo.profile openid email',
-        prompt: 'consent',
-    })
-
-    res.json({ url: authorizeUrl })
+        // Pour autoriser l'utilisation de http ou lieu de https
+        res.header('Referrer-Policy', 'no-referrer-when-downgrade')
+    
+        const redirectUrl = `${backAddress}/users/google/auth`
+    
+        const oAuth2Client = new OAuth2Client(
+            googleId,
+            googleSecret,
+            redirectUrl,
+        )
+    
+        const authorizeUrl = oAuth2Client.generateAuthUrl({
+    
+            // Pour avoir un nouveau token à chaque fois
+            access_type: 'offline',
+            scope: 'https://www.googleapis.com/auth/userinfo.profile openid email',
+            prompt: 'consent',
+        })
+    
+        res.json({ url: authorizeUrl })
+    }catch(error){res.json({error})}
 })
 
 
@@ -365,6 +371,8 @@ router.get('/google/auth', async (req, res) => {
     } catch (error) { console.log(error) }
 })
 
+// Route pour obtenir toutes les infos du user dans bdd en retour de connexion google
+
 router.put('/googleUserInfos', async (req, res) => {
     const { jwtToken, pantsNotLinked, topsNotLinked } = req.body
 
@@ -397,7 +405,7 @@ router.put('/googleUserInfos', async (req, res) => {
         await newData.populate('cart_pants')
         await newData.populate('cart_tops')
 
-        res.json({ result: true, token: jwtToken, firstname: newData.firstname, is_admin: newData.is_admin, cart_pants: newData.cart_pants, cart_tops: newData.cart_tops })
+        res.json({ result: true, token: jwtToken, firstname: newData.firstname, is_admin: newData.is_admin, cart_pants: newData.cart_pants, cart_tops: newData.cart_tops, addresses : newData.addresses })
 
     } catch (error) { res.json({ result: false, error }) }
 })
