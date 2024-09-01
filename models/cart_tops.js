@@ -9,7 +9,6 @@ const cartTopSchema = mongoose.Schema({
     description: String,
     arrival_date : Date,
     createdAt : Date,
-    
 })
 
 const CartTop = mongoose.model('cart_tops', cartTopSchema)
