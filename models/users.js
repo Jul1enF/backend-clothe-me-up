@@ -24,6 +24,7 @@ const userSchema = mongoose.Schema({
     cart_pants : [{ type: mongoose.Schema.Types.ObjectId, ref: 'cart_pants' }],
     cart_tops : [{ type: mongoose.Schema.Types.ObjectId, ref: 'cart_tops' }],
     token : String,
+    orders: [{ type: mongoose.Schema.Types.ObjectId, ref: 'orders' }],
 })
 
 const User = mongoose.model('users', userSchema)
