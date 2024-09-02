@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const cartTopSchema = mongoose.Schema({
+const orderedArticleSchema=mongoose.Schema({
     name : String,
     size : String,
     imgUrl : String,
@@ -11,5 +11,5 @@ const cartTopSchema = mongoose.Schema({
     createdAt : Date,
 })
 
-const CartTop = mongoose.model('cart_tops', cartTopSchema)
-module.exports = CartTop
+const OrderedArticle = mongoose.model('ordered_articles', orderedArticleSchema)
+module.exports = OrderedArticle

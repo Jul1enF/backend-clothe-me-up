@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const cartPantSchema = mongoose.Schema({
+const articleSchema = mongoose.Schema({
     name : String,
     size : String,
     imgUrl : String,
@@ -8,9 +8,7 @@ const cartPantSchema = mongoose.Schema({
     category :String,
     description: String,
     arrival_date : Date,
-    createdAt : Date,
-    
 })
 
-const CartPant = mongoose.model('cart_pants', cartPantSchema)
-module.exports = CartPant
+const Article = mongoose.model('articles', articleSchema)
+module.exports = Article

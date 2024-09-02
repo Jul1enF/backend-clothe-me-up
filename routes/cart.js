@@ -2,9 +2,7 @@ var express = require('express');
 var router = express.Router();
 
 var User = require('../models/users')
-const CartPant = require('../models/cart_pants')
-const CartTop = require("../models/cart_tops")
-const { checkBody } = require('../modules/checkBody')
+const CartArticle = require("../models/cart_articles")
 const uid2 = require('uid2')
 const jwt = require('jsonwebtoken')
 
@@ -17,71 +15,54 @@ const googleId = process.env.GOOGLE_ID
 const googleSecret = process.env.GOOGLE_SECRET
 const { OAuth2Client } = require('google-auth-library')
 
+
+// Route pour vérifier que les articles du panier sont toujours dedans
+
 router.put('/checkArticles', async (req, res) => {
-    let { cart_pants, cart_tops, jwtToken, pantsNotLinked, topsNotLinked } = req.body
+    let { cart_articles, jwtToken, articlesNotLinked } = req.body
 
     try {
         // Vérif dispos articles si utilisateur non connecté
         if (!jwtToken) {
             let change = false
-            for (let pant of cart_pants) {
-                const answer = await CartPant.findOne({ _id: pant._id })
+            for (let article of cart_articles) {
+                const answer = await CartArticle.findOne({ _id: article._id })
 
                 if (answer == null) {
-                    cart_pants = cart_pants.filter(e => e._id !== pant._id)
-                    pantsNotLinked = pantsNotLinked.filter(e => e !== pant._id)
+                    cart_articles = cart_articles.filter(e => e._id !== article._id)
+                    articlesNotLinked = articlesNotLinked.filter(e => e !== article._id)
                     change = true
                 }
             }
 
-            for (let top of cart_tops) {
-                const answer = await CartTop.findById({ _id: top._id })
-
-                if (answer == null) {
-                    cart_tops = cart_tops.filter(e => e._id !== top._id)
-                    topsNotLinked = topsNotLinked.filter(e => e !== top._id)
-                    change = true
-                }
-            }
-            res.json({ result: true, change, cart_pants, cart_tops, pantsNotLinked, topsNotLinked })
+            res.json({ result: true, change, cart_articles, articlesNotLinked })
         }
         // Vérif dispos articles si utilisateur connecté
         else {
             const decryptedToken = jwt.verify(jwtToken, secretToken)
-            const data = await User.findOne({ token: decryptedToken.token })
+            let data = await User.findOne({ token: decryptedToken.token })
 
             if (!data) { res.json({ result: false, error: "user not found" }) }
             else {
                 let change = false
 
-                for (let pant of data.cart_pants) {
-                    const answer = await CartPant.findOne({ _id: pant })
+                for (let article of data.cart_articles) {
+                    const answer = await CartArticle.findOne({ _id: article })
 
 
                     if (answer == null) {
-                        data.cart_pants = data.cart_pants.filter(e => e !== pant)
-                        change = true
-                    }
-                }
-
-                for (let top of data.cart_tops) {
-                    const answer = await CartTop.findOne({ _id: top })
-
-
-                    if (answer == null) {
-                        data.cart_tops = data.cart_tops.filter(e => e !== top)
+                        data.cart_articles = data.cart_articles.filter(e => e !== article)
                         change = true
                     }
                 }
 
                 if (change) {
                     const newData = await data.save()
-                    await newData.populate('cart_pants')
-                    await newData.populate('cart_tops')
+                    await newData.populate('cart_articles')
 
-                    res.json({result : true, change, cart_pants : newData.cart_pants, cart_tops : newData.cart_tops })
+                    res.json({ result: true, change, cart_articles: newData.cart_articles })
                 } else {
-                    res.json({result : true, change})
+                    res.json({ result: true, change })
                 }
             }
         }
@@ -95,28 +76,23 @@ router.put('/checkArticles', async (req, res) => {
 
 // Route pour supprimer du panier un article
 
-router.delete('/deleteArticle/:_id/:category/:jwtToken', async (req, res)=>{
-let {_id, jwtToken, category}=req.params
-try{
-if (category == "tops"){
-    const data = await CartTop.deleteOne({_id})
-    res.json({result:true})
-}
-else{
-    const data = await CartPant.deleteOne({_id})
-    res.json({result:true})
-}
-if(jwtToken !=="none")
-{
-    const decryptedToken = jwt.verify(jwtToken, secretToken)
-    const user = await User.findOne({token: decryptedToken.token})
+router.delete('/deleteArticle/:_id/:jwtToken', async (req, res) => {
+    let { _id, jwtToken } = req.params
+    try {
 
-    category === "tops" ? user.cart_tops=user.cart_tops.filter(e=>e.toString()!==_id) : user.cart_pants=user.cart_pants.filter(e=>e.toString()!==_id)
+        const data = await CartArticle.deleteOne({ _id })
+        res.json({ result: true })
 
-    await user.save()
-}
+        if (jwtToken !== "none") {
+            const decryptedToken = jwt.verify(jwtToken, secretToken)
+            const user = await User.findOne({ token: decryptedToken.token })
 
-}catch(error){res.json({error})}
+            user.cart_articles = user.cart_articles.filter(e => e.toString() !== _id)
+
+            await user.save()
+        }
+
+    } catch (error) { res.json({ error }) }
 })
 
 
@@ -193,7 +169,7 @@ router.get('/google/auth', async (req, res) => {
         const token = uid2(32)
         const jwtToken = jwt.sign({
             token,
-        }, secretToken, { expiresIn: '2h' })
+        }, secretToken, { expiresIn: '3h' })
 
         const result = await User.findOne({ email })
         // Si l'utilisateur se connecte
@@ -220,46 +196,39 @@ router.get('/google/auth', async (req, res) => {
     } catch (error) { console.log(error) }
 })
 
+
+
+// Route de récupération des infos du user google
+
 router.put('/googleUserInfos', async (req, res) => {
-    const { jwtToken, pantsNotLinked, topsNotLinked } = req.body
+    const { jwtToken, articlesNotLinked } = req.body
 
     try {
         const decryptedToken = jwt.verify(jwtToken, secretToken)
         const data = await User.findOne({ token: decryptedToken.token })
 
         // Ajout d'articles présents dans le panier et non enregistrés
-        if (pantsNotLinked.length > 0) {
-            data.cart_pants = [...data.cart_pants, ...pantsNotLinked]
-        }
-        if (topsNotLinked.length > 0) {
-            data.cart_tops = [...data.cart_tops, ...topsNotLinked]
+        if (articlesNotLinked.length > 0) {
+            data.cart_articles = [...data.cart_articles, ...articlesNotLinked]
         }
 
         // Vérif dispo articles du panier
 
         let change = false
 
-        for (let pant of data.cart_pants) {
-            const answer = await CartPant.findOne({_id : pant})
+        for (let article of data.cart_articles) {
+            const answer = await CartArticle.findOne({ _id: article })
 
-            if (answer == null) { data.cart_pants = data.cart_pants.filter(e => e !== pant) 
-                change=true
+            if (answer == null) {
+                data.cart_articles = data.cart_articles.filter(e => e !== article)
+                change = true
             }
         }
 
-        for (let top of data.cart_tops) {
-            const answer = await CartTop.findOne({_id : top})
-
-            if (answer == null) { data.cart_tops = data.cart_tops.filter(e => e !== top)
-                change=true
-             }
-        }
-
         const newData = await data.save()
-        await newData.populate('cart_pants')
-        await newData.populate('cart_tops')
+        await newData.populate('cart_articles')
 
-        res.json({ result: true, token: jwtToken, firstname: newData.firstname, is_admin: newData.is_admin, cart_pants: newData.cart_pants, cart_tops: newData.cart_tops, change, addresses : newData.addresses })
+        res.json({ result: true, token: jwtToken, firstname: newData.firstname, is_admin: newData.is_admin, cart_articles: newData.cart_articles , change, addresses: newData.addresses })
 
     } catch (error) { res.json({ result: false, error }) }
 })

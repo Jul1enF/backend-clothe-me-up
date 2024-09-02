@@ -9,5 +9,8 @@ const orderSchema = mongoose.Schema({
   delivery_price : Number,
   total_price : Number,
   user : { type: mongoose.Schema.Types.ObjectId, ref: 'users' },
-  items : [{ type: mongoose.Schema.Types.ObjectId, ref: 'items_ordered' }]
+  articles : [{ type: mongoose.Schema.Types.ObjectId, ref: 'ordered_articles' }]
 })
+
+const Order = mongoose.model('orders', orderSchema)
+module.exports= Order

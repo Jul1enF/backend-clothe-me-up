@@ -5,6 +5,6 @@ const order_numberSchema = mongoose.Schema({
     name : String,
 })
 
-const OrderNumber = mongoose.model("order_number", order_numberSchema)
+const OrderNumber = mongoose.model("order_numbers", order_numberSchema)
 
 module.exports=OrderNumber

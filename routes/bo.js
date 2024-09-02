@@ -1,7 +1,6 @@
 var express = require('express');
 var router = express.Router();
-const Pant = require("../models/pants")
-const Top = require('../models/tops')
+const Article = require('../models/articles')
 const User = require("../models/users")
 const jwt = require('jsonwebtoken')
 
@@ -54,11 +53,10 @@ router.post('/addArticles', async (req, res) => {
       }
     }
 
-    // Enregistrement de la catégorie pants
+    // Enregistrement des articles
 
-    if (category == "pants") {
       for (let i = 0; i < stock1; i++) {
-        const newPant = new Pant({
+        const newArticle = new Article({
           name,
           imgUrl,
           price,
@@ -67,11 +65,11 @@ router.post('/addArticles', async (req, res) => {
           size: size1,
           arrival_date: new Date(),
         })
-        await newPant.save()
+        await newArticle.save()
       }
       if (size2) {
         for (let i = 0; i < stock2; i++) {
-          const newPant = new Pant({
+          const newArticle = new Article({
             name,
             imgUrl,
             price,
@@ -80,12 +78,12 @@ router.post('/addArticles', async (req, res) => {
             size: size2,
             arrival_date: new Date(),
           })
-          await newPant.save()
+          await newArticle.save()
         }
       }
       if (size3) {
         for (let i = 0; i < stock3; i++) {
-          const newPant = new Pant({
+          const newArticle = new Article({
             name,
             imgUrl,
             price,
@@ -94,12 +92,12 @@ router.post('/addArticles', async (req, res) => {
             size: size3,
             arrival_date: new Date(),
           })
-          await newPant.save()
+          await newArticle.save()
         }
       }
       if (size4) {
         for (let i = 0; i < stock4; i++) {
-          const newPant = new Pant({
+          const newArticle = new Article({
             name,
             imgUrl,
             price,
@@ -108,12 +106,12 @@ router.post('/addArticles', async (req, res) => {
             size: size4,
             arrival_date: new Date(),
           })
-          await newPant.save()
+          await newArticle.save()
         }
       }
       if (size5) {
         for (let i = 0; i < stock5; i++) {
-          const newPant = new Pant({
+          const newArticle = new Article({
             name,
             imgUrl,
             price,
@@ -122,12 +120,12 @@ router.post('/addArticles', async (req, res) => {
             size: size5,
             arrival_date: new Date(),
           })
-          await newPant.save()
+          await newArticle.save()
         }
       }
       if (size6) {
         for (let i = 0; i < stock6; i++) {
-          const newPant = new Pant({
+          const newArticle = new Article({
             name,
             imgUrl,
             price,
@@ -136,12 +134,12 @@ router.post('/addArticles', async (req, res) => {
             size: size6,
             arrival_date: new Date(),
           })
-          await newPant.save()
+          await newArticle.save()
         }
       }
       if (size7) {
         for (let i = 0; i < stock7; i++) {
-          const newPant = new Pant({
+          const newArticle = new Article({
             name,
             imgUrl,
             price,
@@ -150,12 +148,12 @@ router.post('/addArticles', async (req, res) => {
             size: size7,
             arrival_date: new Date(),
           })
-          await newPant.save()
+          await newArticle.save()
         }
       }
       if (size8) {
         for (let i = 0; i < stock8; i++) {
-          const newPant = new Pant({
+          const newArticle = new Article({
             name,
             imgUrl,
             price,
@@ -164,131 +162,11 @@ router.post('/addArticles', async (req, res) => {
             size: size8,
             arrival_date: new Date(),
           })
-          await newPant.save()
+          await newArticle.save()
         }
       }
+
       res.json({ result: true })
-    }
-
-
-    // Enregistrement de la catégorie tops
-
-    else if (category == "tops") {
-      for (let i = 0; i < stock1; i++) {
-        const newTop = new Top({
-          name,
-          imgUrl,
-          price,
-          description,
-          category,
-          size: size1,
-          arrival_date: new Date(),
-        })
-        await newTop.save()
-      }
-      if (size2) {
-        for (let i = 0; i < stock2; i++) {
-          const newTop = new Top({
-            name,
-            imgUrl,
-            price,
-            description,
-            category,
-            size: size2,
-            arrival_date: new Date(),
-          })
-          await newTop.save()
-        }
-      }
-      if (size3) {
-        for (let i = 0; i < stock3; i++) {
-          const newTop = new Top({
-            name,
-            imgUrl,
-            price,
-            description,
-            category,
-            size: size3,
-            arrival_date: new Date(),
-          })
-          await newTop.save()
-        }
-      }
-      if (size4) {
-        for (let i = 0; i < stock4; i++) {
-          const newTop = new Top({
-            name,
-            imgUrl,
-            price,
-            description,
-            category,
-            size: size4,
-            arrival_date: new Date(),
-          })
-          await newTop.save()
-        }
-      }
-      if (size5) {
-        for (let i = 0; i < stock5; i++) {
-          const newTop = new Top({
-            name,
-            imgUrl,
-            price,
-            description,
-            category,
-            size: size5,
-            arrival_date: new Date(),
-          })
-          await newTop.save()
-        }
-      }
-      if (size6) {
-        for (let i = 0; i < stock6; i++) {
-          const newTop = new Top({
-            name,
-            imgUrl,
-            price,
-            description,
-            category,
-            size: size6,
-            arrival_date: new Date(),
-          })
-          await newTop.save()
-        }
-      }
-      if (size7) {
-        for (let i = 0; i < stock7; i++) {
-          const newTop = new Top({
-            name,
-            imgUrl,
-            price,
-            description,
-            category,
-            size: size7,
-            arrival_date: new Date(),
-          })
-          await newTop.save()
-        }
-      }
-      if (size8) {
-        for (let i = 0; i < stock8; i++) {
-          const newTop = new Top({
-            name,
-            imgUrl,
-            price,
-            description,
-            category,
-            size: size8,
-            arrival_date: new Date(),
-          })
-          await newTop.save()
-        }
-      }
-      res.json({ result: true })
-    }
-    else {
-      res.json({ result: false, error: "Erreur, problème d'enregistrement !" })
-    }
   }
   catch (error) {
     res.json({ result: false, error })
