@@ -194,12 +194,6 @@ router.put('/payOrder', async (req, res) => {
 
         }
 
-        // const newOrderNumber= new OrderNumber({
-        //     number : 1,
-        //     name : "Clothe me up",
-        // })
-
-        // await newOrderNumber.save()
 
         // Enregistrement d'un nouveau document collection orders
 
@@ -207,7 +201,7 @@ router.put('/payOrder', async (req, res) => {
         let lastNum = 0
 
         const dataOrderNumber = await OrderNumber.findOne({name: "Clothe me up"})
-        console.log(dataOrderNumber)
+     
         lastNum+=dataOrderNumber.number
 
         dataOrderNumber.number+=1

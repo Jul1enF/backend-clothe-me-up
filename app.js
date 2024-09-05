@@ -12,6 +12,7 @@ var boRouter = require('./routes/bo')
 var cartRouter = require('./routes/cart')
 var modificationRouter = require('./routes/modification')
 var ordersRouter = require('./routes/orders')
+var deliveriesRouter = require('./routes/deliveries')
 
 var app = express();
 const cors = require('cors')
@@ -30,5 +31,6 @@ app.use('/bo', boRouter)
 app.use('/cart', cartRouter)
 app.use('/modification', modificationRouter)
 app.use('/orders', ordersRouter)
+app.use('/deliveries', deliveriesRouter)
 
 module.exports = app;
