@@ -47,7 +47,7 @@ router.post('/pickups', async (req, res) => {
     let pickups = []
 
     jsonData["soap:Envelope"]["soap:Body"]["ns2:findRDVPointRetraitAcheminementResponse"]["return"]["listePointRetraitAcheminement"].map((e,i)=>{
-        if (i<10){
+        if (i<15){
             pickups.push({
                 title : e.nom._text,
                 address : e.adresse1._text,
@@ -57,7 +57,7 @@ router.post('/pickups', async (req, res) => {
                 longitude : e.coordGeolocalisationLongitude._text,
                 openingMonday : e.horairesOuvertureLundi._text,
                 openingTuesday : e.horairesOuvertureMardi._text,
-                openingWebesday : e.horairesOuvertureMercredi._text,
+                openingWenesday : e.horairesOuvertureMercredi._text,
                 openingThursday : e.horairesOuvertureJeudi._text,
                 openingFriday : e.horairesOuvertureVendredi._text,
                 openingSaturday : e.horairesOuvertureSamedi._text,
