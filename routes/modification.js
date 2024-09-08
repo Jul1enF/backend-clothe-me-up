@@ -28,7 +28,7 @@ router.put('/addAdress', async (req, res)=>{
 
         res.json({result:true, addresse : user.addresses[i]})
 
-    }catch(error){res.json({error})}
+    }catch(err){res.json({err})}
 })
 
 module.exports = router

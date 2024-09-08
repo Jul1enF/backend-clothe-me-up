@@ -104,7 +104,7 @@ router.post('/signup', async (req, res) => {
             res.json({ result: true })
         }
     }
-    }catch(error){res.json({error})}
+    }catch(err){res.json({err})}
 })
 
 // Route de vérification de l'email
@@ -153,7 +153,7 @@ router.put('/verification', async (req, res) => {
             const newData = await data.save()
             await newData.populate('cart_articles')
 
-            res.json({ result: true, token: jwtToken, firstname: newData.firstname, is_admin: newData.is_admin, cart_articles: newData.cart_articles, addresses : newData.addresses })
+            res.json({ result: true, token: jwtToken, firstname: newData.firstname, is_admin: newData.is_admin, cart_articles: newData.cart_articles, addresses : newData.addresses, orders : newData.orders })
 
         }
     }
@@ -211,6 +211,8 @@ router.put('/signin', async (req, res) => {
     
                 const newData = await data.save()
                 await newData.populate('cart_articles')
+                await newData.populate('orders')
+                await newData.populate({path: 'orders', populate: {path:'articles'} })
     
                 //Renvoi des infos utiles au réducer
     
@@ -218,7 +220,7 @@ router.put('/signin', async (req, res) => {
                     token,
                 }, secretToken, { expiresIn: '3h' })
     
-                res.json({ result: true, token: jwtToken, firstname: newData.firstname, is_admin: newData.is_admin, cart_articles: newData.cart_articles, addresses : newData.addresses})
+                res.json({ result: true, token: jwtToken, firstname: newData.firstname, is_admin: newData.is_admin, cart_articles: newData.cart_articles, addresses : newData.addresses, orders : newData.orders})
             }
             // Si l'adresse mail n'a pas été vérifiée
             else if (data && bcrypt.compareSync(password, data.password)) {
@@ -242,7 +244,7 @@ router.put('/signin', async (req, res) => {
             }
     
         }
-    }catch(error){res.json({error})}
+    }catch(err){res.json({err})}
 })
 
 
@@ -275,7 +277,7 @@ router.post('/google', async (req, res) => {
         })
     
         res.json({ url: authorizeUrl })
-    }catch(error){res.json({error})}
+    }catch(err){res.json({err})}
 })
 
 
@@ -345,7 +347,7 @@ router.get('/google/auth', async (req, res) => {
         res.redirect(`${frontAddress}/home/${jwtToken}`)
 
 
-    } catch (error) { console.log(error) }
+    } catch (err) { console.log(err) }
 })
 
 // Route pour obtenir toutes les infos du user dans bdd en retour de connexion google
@@ -371,10 +373,12 @@ router.put('/googleUserInfos', async (req, res) => {
 
         const newData = await data.save()
         await newData.populate('cart_articles')
+        await newData.populate('orders')
+        await newData.populate({path: 'orders', populate: {path:'articles'} })
 
-        res.json({ result: true, token: jwtToken, firstname: newData.firstname, is_admin: newData.is_admin, cart_articles: newData.cart_articles, addresses : newData.addresses })
+        res.json({ result: true, token: jwtToken, firstname: newData.firstname, is_admin: newData.is_admin, cart_articles: newData.cart_articles, addresses : newData.addresses, orders : newData.orders })
 
-    } catch (error) { res.json({ result: false, error }) }
+    } catch (err) { res.json({ result: false, err }) }
 })
 
 module.exports = router;

@@ -59,8 +59,8 @@ router.put('/addCartArticle', async(req, res)=>{
       res.json({result:true, cartArticleSaved, noLink: cartArticleSaved._id})
     }
 
-  }catch (error){
-    res.json({result : false, error})
+  }catch (err){
+    res.json({result : false, err})
   }
 })
 

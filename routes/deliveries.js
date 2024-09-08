@@ -3,6 +3,7 @@ var router = express.Router()
 const moment = require('moment')
 let xmlParser = require('xml2json')
 var convert = require('xml-js');
+const uid2 = require('uid2')
 
 router.post('/pickups', async (req, res) => {
 
@@ -48,6 +49,8 @@ router.post('/pickups', async (req, res) => {
 
     jsonData["soap:Envelope"]["soap:Body"]["ns2:findRDVPointRetraitAcheminementResponse"]["return"]["listePointRetraitAcheminement"].map((e,i)=>{
         if (i<15){
+            const id = uid2(16)
+
             pickups.push({
                 title : e.nom._text,
                 address : e.adresse1._text,
@@ -62,13 +65,14 @@ router.post('/pickups', async (req, res) => {
                 openingFriday : e.horairesOuvertureVendredi._text,
                 openingSaturday : e.horairesOuvertureSamedi._text,
                 openingSunday : e.horairesOuvertureDimanche._text,
+                id,
             })
         }else{return}
     })
 
     res.json({ result : true, pickups })
 
-    } catch (error) { res.json({ result: false, error }) }
+    } catch (err) { res.json({ result: false, err }) }
 
 
 })

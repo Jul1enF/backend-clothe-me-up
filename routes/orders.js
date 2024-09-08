@@ -12,6 +12,21 @@ const moment = require('moment')
 
 const secretToken = process.env.SECRET_TOKEN
 
+const nodemailer = require("nodemailer")
+const checkEmail = process.env.CHECK_EMAIL
+const passwordCheckMail = process.env.PASSWORD_CHECK_EMAIL
+
+const emailTransporter = nodemailer.createTransport({
+    service: 'gmail',
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: {
+        user: checkEmail,
+        pass: passwordCheckMail,
+    }
+})
+
 
 // Router pour vérifier avant paiement que les articles sont encore dans les collections panier et sinon en stock.
 
@@ -67,7 +82,7 @@ router.put('/checkArticles', async (req, res) => {
 
         res.json({ result: true, change, badChange, articlesRemoved })
 
-    } catch (error) { res.json({ error }) }
+    } catch (err) { res.json({ err }) }
 })
 
 
@@ -224,6 +239,7 @@ router.put('/payOrder', async (req, res) => {
             total_price : total,
             user : data._id,
             articles,
+            createdAt : new Date(),
         })
 
         const newSavedOrder = await newOrder.save()
@@ -243,7 +259,87 @@ router.put('/payOrder', async (req, res) => {
         })
 
 
-    } catch (error) { res.json({ error }) }
+
+        // Envoi email de confirmation à l'utilisateur
+
+        let detailArticles=""
+
+        cart_articles.map(e=>detailArticles+= `<h2 style="width:100%; text-align:center; color:rgb(13,1, 102)">- ${e.name}, taille : ${e.size}, prix : ${e.price.toFixed(2)}€</h2>`)
+
+        const userConfirmartionEmail = {
+            from: checkEmail,
+            to: data.email,
+            subject: 'Confirmation de votre commande',
+            html: `<body>
+          <div style="width: 100%;
+        height: 100px; background-color: rgb(13,1,102); margin:0; padding:0; margin-bottom:20px">
+            <h1 style="color:white; margin:0; padding:0; width:100%; text-align:center; padding-top:20px; font-size:40px">CLOTHE ME UP !</h1>
+          </div>
+            <h2 style="width:100%; text-align:center; margin-bottom:5px ; font-size: 25px; color:black">Bonjour ${data.firstname},</h2>
+            <h2 style="width:100%; text-align:center ; margin-bottom:30px; color:black">Le règlement de votre commande numéro ${order_number} a bien été accepté. Merci pour votre achat sur Clothe me up !</h2>
+        <div style="width: 100% ; background-color: rgb(245,245,245); margin:0; padding-top:15px; padding-bottom:15px">
+            <h2 style="width:100%; text-align:center; margin-bottom:25px; font-weight:650; text-decoration:underline; color:rgb(13,1, 102); font-size:22px">Détail de votre commande :</h2>
+            ${detailArticles}
+            <h2 style="width:100%; text-align:center; margin-bottom:15px; padding-top:10px; color:rgb(13,1, 102)">Prix total : ${total.toFixed(2)}€   (frais de port : ${deliveryPrice.toFixed(2)}€)</h2>
+             <h2 style="width:100%; text-align:center; color:rgb(13,1, 102)">Nous vous enverrons un mail dès que votre commande sera envoyée.</h2>
+              <h2 style="width:100%; text-align:center; color:rgb(13,1, 102)">À bientôt sur Clothe me up !</h2>
+        </div>
+          </body>
+          `
+        }
+
+        await emailTransporter.sendMail(userConfirmartionEmail)
+
+
+        // Envoi d'un mail pour signaler au backoffice qu'une commande a été passée
+
+        let addressToDeliver=""
+        if(chosenAdresse2){
+            addressToDeliver=`<h2 style="width:100%; text-align:center; color:rgb(13,1, 102); padding-top:20px; text-decoration:underline">Adresse de livraison :</h2>
+            <h2 style="width:100%; text-align:center; color:rgb(13,1, 102)">${chosenAdresse2.title} : ${chosenAdresse2.address} ${chosenAdresse2.post_code} ${chosenAdresse2.city}</h2>`
+        }else if (deliveryMode !== "Retrait en magasin"){
+            addressToDeliver=`<h2 style="width:100%; text-align:center; color:rgb(13,1, 102); padding-top:20px; text-decoration:underline">Adresse de livraison :</h2>
+            <h2 style="width:100%; text-align:center; color:rgb(13,1, 102)">${chosenAdresse.title} : ${chosenAdresse.firstname} ${chosenAdresse.name} ${chosenAdresse.address} ${chosenAdresse.post_code} ${chosenAdresse.city}</h2>`
+        }
+
+        let client
+        if (data.name){
+            client=`  <h2 style="width:100%; text-align:center; color:rgb(13,1, 102)">${data.firstname} ${data.name} (${data.email})</h2>`
+        }else{
+            client=`  <h2 style="width:100%; text-align:center; color:rgb(13,1, 102)">${data.firstname} (${data.email})</h2>`
+        }
+        
+
+
+        const boConfirmartionEmail = {
+            from: checkEmail,
+            to: checkEmail,
+            subject: 'Nouvelle commande',
+            html: `<body>
+          <div style="width: 100%;
+        height: 100px; background-color: rgb(13,1,102); margin:0; padding:0; margin-bottom:20px">
+            <h1 style="color:white; margin:0; padding:0; width:100%; text-align:center; padding-top:20px; font-size:40px">CLOTHE ME UP !</h1>
+          </div>
+            <h2 style="width:100%; text-align:center; margin-bottom:5px ; font-size: 25px; color:black">Bonjour,</h2>
+            <h2 style="width:100%; text-align:center ; margin-bottom:30px; color:black">Une nouvelle commande vient d'être acceptée !</h2>
+        <div style="width: 100% ; background-color: rgb(245,245,245); margin:0; padding-top:15px; padding-bottom:15px">
+            <h2 style="width:100%; text-align:center; margin-bottom:25px; font-weight:650; text-decoration:underline; color:rgb(13,1, 102); font-size:22px">Détail de la commande :</h2>
+             <h2 style="width:100%; text-align:center; margin-bottom:15px; color:rgb(13,1, 102)">Commmande numéro : ${order_number}</h2>
+               <h2 style="width:100%; text-align:center; color:rgb(13,1, 102); text-decoration:underline">Client :</h2>
+               ${client}
+              <h2 style="width:100%; text-align:center; color:rgb(13,1, 102); text-decoration:underline; padding-top:20px">Articles :</h2>
+            ${detailArticles}
+            <h2 style="width:100%; text-align:center; color:rgb(13,1, 102); padding-top:25px">Mode de livraison : ${deliveryMode}</h2>
+            ${addressToDeliver}
+            <h2 style="width:100%; text-align:center; margin-bottom:15px; padding-top:10px; color:rgb(13,1, 102)">Prix total : ${total.toFixed(2)}€   (frais de port : ${deliveryPrice.toFixed(2)}€)</h2>
+        </div>
+          </body>
+          `
+        }
+        
+        await emailTransporter.sendMail(boConfirmartionEmail)
+
+    } catch (err) { res.json({ err }) }
 })
 
 module.exports = router

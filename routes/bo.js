@@ -27,7 +27,7 @@ router.get('/checkUser/:jwtToken', async (req, res) => {
         res.json({result : true})
       }
     }
-  } catch (error) { res.json({ error }) }
+  } catch (err) { res.json({ err }) }
 })
 
 
@@ -168,8 +168,8 @@ router.post('/addArticles', async (req, res) => {
 
       res.json({ result: true })
   }
-  catch (error) {
-    res.json({ result: false, error })
+  catch (err) {
+    res.json({ result: false, err })
   }
 
 })

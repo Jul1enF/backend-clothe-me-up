@@ -67,8 +67,8 @@ router.put('/checkArticles', async (req, res) => {
             }
         }
 
-    } catch (error) {
-        res.json({ result: false, error })
+    } catch (err) {
+        res.json({ result: false, err })
     }
 
 })
@@ -92,7 +92,7 @@ router.delete('/deleteArticle/:_id/:jwtToken', async (req, res) => {
             await user.save()
         }
 
-    } catch (error) { res.json({ error }) }
+    } catch (err) { res.json({ err }) }
 })
 
 
@@ -193,7 +193,7 @@ router.get('/google/auth', async (req, res) => {
         res.redirect(`${frontAddress}/cart/g/${jwtToken}`)
 
 
-    } catch (error) { console.log(error) }
+    } catch (err) { console.log(err) }
 })
 
 
@@ -227,10 +227,12 @@ router.put('/googleUserInfos', async (req, res) => {
 
         const newData = await data.save()
         await newData.populate('cart_articles')
+        await newData.populate('orders')
+        await newData.populate({path: 'orders', populate: {path:'articles'} })
 
-        res.json({ result: true, token: jwtToken, firstname: newData.firstname, is_admin: newData.is_admin, cart_articles: newData.cart_articles , change, addresses: newData.addresses })
+        res.json({ result: true, token: jwtToken, firstname: newData.firstname, is_admin: newData.is_admin, cart_articles: newData.cart_articles , change, addresses: newData.addresses, orders : newData.orders })
 
-    } catch (error) { res.json({ result: false, error }) }
+    } catch (err) { res.json({ result: false, err }) }
 })
 
 module.exports = router;
