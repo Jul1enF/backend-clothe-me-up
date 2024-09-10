@@ -85,7 +85,7 @@ router.delete('/deleteArticle/:_id/:jwtToken', async (req, res) => {
 
         if (jwtToken !== "none") {
             const decryptedToken = jwt.verify(jwtToken, secretToken)
-            const user = await User.findOne({ token: decryptedToken.token })
+            let user = await User.findOne({ token: decryptedToken.token })
 
             user.cart_articles = user.cart_articles.filter(e => e.toString() !== _id)
 
@@ -230,7 +230,10 @@ router.put('/googleUserInfos', async (req, res) => {
         await newData.populate('orders')
         await newData.populate({path: 'orders', populate: {path:'articles'} })
 
-        res.json({ result: true, token: jwtToken, firstname: newData.firstname, is_admin: newData.is_admin, cart_articles: newData.cart_articles , change, addresses: newData.addresses, orders : newData.orders })
+        let password
+        !newData.password ? password=false : password=true
+
+        res.json({ result: true, token: jwtToken, firstname: newData.firstname, name : newData.name, email : newData.email, mobile_phone: newData.mobile_phone, is_admin: newData.is_admin, cart_articles: newData.cart_articles , change, addresses: newData.addresses, orders : newData.orders, password })
 
     } catch (err) { res.json({ result: false, err }) }
 })

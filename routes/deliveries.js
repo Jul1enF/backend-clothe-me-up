@@ -8,7 +8,7 @@ const uid2 = require('uid2')
 router.post('/pickups', async (req, res) => {
 
     try {
-    const { address, city, post_code } = req.body.chosenAdresse
+    const { address, city, post_code } = req.body.chosenAddress
     
     const cityWithoutSpaces = city.replace(/ /g, "-")
     const shippingDate = moment(new Date()).format("DD/MM/YYYY")

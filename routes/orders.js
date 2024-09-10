@@ -94,7 +94,7 @@ router.put('/checkArticles', async (req, res) => {
 
 
 router.put('/payOrder', async (req, res) => {
-    const { cart_articles, jwtToken, totalArticles, deliveryPrice, total, chosenAdresse, chosenAdresse2, deliveryMode, CardNumber, CardMonth, CardYear, CardCVV, ClientIp } = req.body
+    const { cart_articles, jwtToken, totalArticles, deliveryPrice, total, chosenAddress, chosenAddress2, deliveryMode, CardNumber, CardMonth, CardYear, CardCVV, ClientIp } = req.body
 
     try {
         let badChange = false
@@ -223,7 +223,7 @@ router.put('/payOrder', async (req, res) => {
         await dataOrderNumber.save()
 
         // Création du numéro de la commande actuelle
-        const date = moment(new Date()).format('YYYYMMDDHHmm')
+        const date = moment(new Date()).format('YYMMDDHHmm')
         const dateAndNum = date+lastNum.toString()
         const order_number = Number(dateAndNum)
 
@@ -231,8 +231,8 @@ router.put('/payOrder', async (req, res) => {
         // Création d'un nouveau document collection orders
         const newOrder = new Order({
             order_number,
-            chosen_adresse : chosenAdresse,
-            chosen_adresse2 : chosenAdresse2,
+            chosen_address : chosenAddress,
+            chosen_address2 : chosenAddress2,
             delivery_mode : deliveryMode,
             articles_price : totalArticles,
             delivery_price : deliveryPrice,
@@ -243,6 +243,7 @@ router.put('/payOrder', async (req, res) => {
         })
 
         const newSavedOrder = await newOrder.save()
+        await newSavedOrder.populate('articles')
 
 
         // Vidage du panier du user dans son document (cart_articles) et rattachement de l'id de sa commande
@@ -294,12 +295,12 @@ router.put('/payOrder', async (req, res) => {
         // Envoi d'un mail pour signaler au backoffice qu'une commande a été passée
 
         let addressToDeliver=""
-        if(chosenAdresse2){
+        if(chosenAddress2){
             addressToDeliver=`<h2 style="width:100%; text-align:center; color:rgb(13,1, 102); padding-top:20px; text-decoration:underline">Adresse de livraison :</h2>
-            <h2 style="width:100%; text-align:center; color:rgb(13,1, 102)">${chosenAdresse2.title} : ${chosenAdresse2.address} ${chosenAdresse2.post_code} ${chosenAdresse2.city}</h2>`
+            <h2 style="width:100%; text-align:center; color:rgb(13,1, 102)">${chosenAddress2.title} : ${chosenAddress2.address} ${chosenAddress2.post_code} ${chosenAddress2.city}</h2>`
         }else if (deliveryMode !== "Retrait en magasin"){
             addressToDeliver=`<h2 style="width:100%; text-align:center; color:rgb(13,1, 102); padding-top:20px; text-decoration:underline">Adresse de livraison :</h2>
-            <h2 style="width:100%; text-align:center; color:rgb(13,1, 102)">${chosenAdresse.title} : ${chosenAdresse.firstname} ${chosenAdresse.name} ${chosenAdresse.address} ${chosenAdresse.post_code} ${chosenAdresse.city}</h2>`
+            <h2 style="width:100%; text-align:center; color:rgb(13,1, 102)">${chosenAddress.title} : ${chosenAddress.firstname} ${chosenAddress.name} ${chosenAddress.address} ${chosenAddress.post_code} ${chosenAddress.city}</h2>`
         }
 
         let client

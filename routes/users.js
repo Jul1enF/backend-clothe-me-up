@@ -153,7 +153,7 @@ router.put('/verification', async (req, res) => {
             const newData = await data.save()
             await newData.populate('cart_articles')
 
-            res.json({ result: true, token: jwtToken, firstname: newData.firstname, is_admin: newData.is_admin, cart_articles: newData.cart_articles, addresses : newData.addresses, orders : newData.orders })
+            res.json({ result: true, token: jwtToken, firstname: newData.firstname,  name : newData.name, email : newData.email, mobile_phone: newData.mobile_phone, is_admin: newData.is_admin, cart_articles: newData.cart_articles, addresses : newData.addresses, orders : newData.orders, password : true })
 
         }
     }
@@ -213,6 +213,7 @@ router.put('/signin', async (req, res) => {
                 await newData.populate('cart_articles')
                 await newData.populate('orders')
                 await newData.populate({path: 'orders', populate: {path:'articles'} })
+
     
                 //Renvoi des infos utiles au réducer
     
@@ -220,7 +221,7 @@ router.put('/signin', async (req, res) => {
                     token,
                 }, secretToken, { expiresIn: '3h' })
     
-                res.json({ result: true, token: jwtToken, firstname: newData.firstname, is_admin: newData.is_admin, cart_articles: newData.cart_articles, addresses : newData.addresses, orders : newData.orders})
+                res.json({ result: true, token: jwtToken, firstname: newData.firstname, name : newData.name, email : newData.email, mobile_phone: newData.mobile_phone, is_admin: newData.is_admin, cart_articles: newData.cart_articles, addresses : newData.addresses, orders : newData.orders, password : true})
             }
             // Si l'adresse mail n'a pas été vérifiée
             else if (data && bcrypt.compareSync(password, data.password)) {
@@ -376,7 +377,10 @@ router.put('/googleUserInfos', async (req, res) => {
         await newData.populate('orders')
         await newData.populate({path: 'orders', populate: {path:'articles'} })
 
-        res.json({ result: true, token: jwtToken, firstname: newData.firstname, is_admin: newData.is_admin, cart_articles: newData.cart_articles, addresses : newData.addresses, orders : newData.orders })
+        let password
+        !newData.password ? password=false : password=true
+
+        res.json({ result: true, token: jwtToken, firstname: newData.firstname, name : newData.name, email : newData.email, mobile_phone: newData.mobile_phone, is_admin: newData.is_admin, cart_articles: newData.cart_articles, addresses : newData.addresses, orders : newData.orders, password })
 
     } catch (err) { res.json({ result: false, err }) }
 })
