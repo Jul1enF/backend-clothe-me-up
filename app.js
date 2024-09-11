@@ -16,7 +16,11 @@ var deliveriesRouter = require('./routes/deliveries')
 
 var app = express();
 const cors = require('cors')
-app.use(cors())
+const corsOptions = {
+    credentials: true,
+    origin: ['https://frontend-clothe-me-up.vercel.app/', 'https://backend-clothe-me-up.vercel.app/']
+}
+app.use(cors(corsOptions))
 
 app.use(logger('dev'));
 app.use(express.json());
