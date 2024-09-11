@@ -60,58 +60,58 @@ router.post('/signup', async (req, res) => {
 
     const { firstname, name, email, password, mobile_phone } = req.body
 
-    try{
+    try {
 
-    if (!checkBody(req.body, ['firstname', 'name', 'email', 'password', 'mobile_phone'])) {
-        res.json({
-            result: false,
-            error: 'Informations manquantes !'
-        })
-        return
-    }
-    else {
-        const data = await User.findOne({ email })
-        if (data) {
+        if (!checkBody(req.body, ['firstname', 'name', 'email', 'password', 'mobile_phone'])) {
             res.json({
                 result: false,
-                error: 'Utilisateur déjà enregistré !'
+                error: 'Informations manquantes !'
             })
             return
         }
         else {
+            const data = await User.findOne({ email })
+            if (data) {
+                res.json({
+                    result: false,
+                    error: 'Utilisateur déjà enregistré !'
+                })
+                return
+            }
+            else {
 
-            const hash = bcrypt.hashSync(password, 10)
-            const token = uid2(32)
+                const hash = bcrypt.hashSync(password, 10)
+                const token = uid2(32)
 
-            const newUser = new User({
-                firstname,
-                name,
-                email,
-                password: hash,
-                mobile_phone,
-                inscription_date: new Date(),
-                is_verified: false,
-                token,
-            })
-            const data = await newUser.save()
+                const newUser = new User({
+                    firstname,
+                    name,
+                    email,
+                    password: hash,
+                    mobile_phone,
+                    inscription_date: new Date(),
+                    is_verified: false,
+                    token,
+                })
+                const data = await newUser.save()
 
-            const jwtToken = jwt.sign({
-                token: data.token,
-            }, secretToken, { expiresIn: '1h' })
+                const jwtToken = jwt.sign({
+                    token: data.token,
+                }, secretToken, { expiresIn: '1h' })
 
-            await emailTransporter.sendMail(checkMail(jwtToken, email, firstname))
+                await emailTransporter.sendMail(checkMail(jwtToken, email, firstname))
 
-            res.json({ result: true })
+                res.json({ result: true })
+            }
         }
-    }
-    }catch(err){res.json({err})}
+    } catch (err) { res.json({ err }) }
 })
 
 // Route de vérification de l'email
 
 router.put('/verification', async (req, res) => {
     try {
-        const { email, jwtToken, articlesNotLinked } = req.body
+        const { email, jwtToken, articlesNotLinked, temporaryToken } = req.body
         const decryptedToken = jwt.verify(jwtToken, secretToken)
 
         if (!decryptedToken) {
@@ -138,22 +138,27 @@ router.put('/verification', async (req, res) => {
                 token: data.token,
             }, secretToken, { expiresIn: '3h' })
 
-            // Ajout d'articles présents dans le panier et non enregistrés
-            if (articlesNotLinked.length > 0) {
-                data.cart_articles = [...data.cart_articles, ...articlesNotLinked]
-            }
 
-            // Vérif dispo articles du panier
-            for (let article of data.cart_articles) {
-                const answer = await CartArticle.findOne({_id : article})
+        // Ajout d'articles présents dans le panier et non enregistrés + Link de ceux ci avec l'id du user
 
-                if (answer == null) { data.cart_articles = data.cart_articles.filter(e => e !== article) }
+        if (articlesNotLinked.length > 0) {
+            for (let article of articlesNotLinked) {
+
+                const basketArticle = await CartArticle.findOne({ _id: article, temporary_user: temporaryToken })
+
+                if (basketArticle) {
+                    data.cart_articles.push(article)
+
+                    basketArticle.user = data._id
+                    await basketArticle.save()
+                }
             }
-    
+        }
+
             const newData = await data.save()
             await newData.populate('cart_articles')
 
-            res.json({ result: true, token: jwtToken, firstname: newData.firstname,  name : newData.name, email : newData.email, mobile_phone: newData.mobile_phone, is_admin: newData.is_admin, cart_articles: newData.cart_articles, addresses : newData.addresses, orders : newData.orders, password : true })
+            res.json({ result: true, token: jwtToken, firstname: newData.firstname, name: newData.name, email: newData.email, mobile_phone: newData.mobile_phone, is_admin: newData.is_admin, cart_articles: newData.cart_articles, addresses: newData.addresses, orders: newData.orders, password: true })
 
         }
     }
@@ -180,9 +185,9 @@ router.put('/verification', async (req, res) => {
 // Route signin
 
 router.put('/signin', async (req, res) => {
-    const { email, password, articlesNotLinked } = req.body
+    const { email, password, articlesNotLinked, temporaryToken } = req.body
 
-    try{
+    try {
         if (!checkBody(req.body, ['email', 'password'])) {
             res.json({
                 result: false,
@@ -194,44 +199,54 @@ router.put('/signin', async (req, res) => {
             if (data && bcrypt.compareSync(password, data.password) && data.is_verified) {
                 const token = uid2(32)
                 data.token = token
-    
-                // Ajout d'articles présents dans le panier et non enregistrés
-    
-                if (articlesNotLinked.length > 0) {
-                    data.cart_articles = [...data.cart_articles, ...articlesNotLinked]
-                }
-    
+
                 // Vérif dispo articles du panier
                 for (let article of data.cart_articles) {
-                    const answer = await CartArticle.findOne({_id : article})
-    
-    
+                    const answer = await CartArticle.findOne({ _id: article, user: data._id })
+
+
                     if (answer == null) { data.cart_articles = data.cart_articles.filter(e => e !== article) }
                 }
-    
+
+                // Ajout d'articles présents dans le panier et non enregistrés + Link de ceux ci avec l'id du user
+
+                if (articlesNotLinked.length > 0) {
+                    for (let article of articlesNotLinked) {
+
+                        const basketArticle = await CartArticle.findOne({ _id: article, temporary_user: temporaryToken })
+
+                        if (basketArticle) {
+                            data.cart_articles.push(article)
+
+                            basketArticle.user = data._id
+                            await basketArticle.save()
+                        }
+                    }
+                }
+
                 const newData = await data.save()
                 await newData.populate('cart_articles')
                 await newData.populate('orders')
-                await newData.populate({path: 'orders', populate: {path:'articles'} })
+                await newData.populate({ path: 'orders', populate: { path: 'articles' } })
 
-    
+
                 //Renvoi des infos utiles au réducer
-    
+
                 const jwtToken = jwt.sign({
                     token,
                 }, secretToken, { expiresIn: '3h' })
-    
-                res.json({ result: true, token: jwtToken, firstname: newData.firstname, name : newData.name, email : newData.email, mobile_phone: newData.mobile_phone, is_admin: newData.is_admin, cart_articles: newData.cart_articles, addresses : newData.addresses, orders : newData.orders, password : true})
+
+                res.json({ result: true, token: jwtToken, firstname: newData.firstname, name: newData.name, email: newData.email, mobile_phone: newData.mobile_phone, is_admin: newData.is_admin, cart_articles: newData.cart_articles, addresses: newData.addresses, orders: newData.orders, password: true })
             }
             // Si l'adresse mail n'a pas été vérifiée
             else if (data && bcrypt.compareSync(password, data.password)) {
-    
+
                 const newJwtToken = jwt.sign({
                     token: data.token,
                 }, secretToken, { expiresIn: '1h' })
-    
+
                 await emailTransporter.sendMail(checkMail(newJwtToken, email, data.firstname))
-    
+
                 res.json({
                     result: false,
                     error: 'Adresse mail non confirmée ! Un nouvel email de vérification vous a été envoyé.'
@@ -243,9 +258,9 @@ router.put('/signin', async (req, res) => {
                     error: 'Email ou mot de passe incorrect.'
                 })
             }
-    
+
         }
-    }catch(err){res.json({err})}
+    } catch (err) { res.json({ err }) }
 })
 
 
@@ -255,34 +270,34 @@ router.put('/signin', async (req, res) => {
 // 1ère route pour avoir une url de connexion google
 
 router.post('/google', async (req, res) => {
-    try{
+    try {
         res.header('Access-Control-Allow-Origin', `${frontAddress}`)
 
         // Pour autoriser l'utilisation de http ou lieu de https
         res.header('Referrer-Policy', 'no-referrer-when-downgrade')
-    
+
         const redirectUrl = `${backAddress}/users/google/auth`
-    
+
         const oAuth2Client = new OAuth2Client(
             googleId,
             googleSecret,
             redirectUrl,
         )
-    
+
         const authorizeUrl = oAuth2Client.generateAuthUrl({
-    
+
             // Pour avoir un nouveau token à chaque fois
             access_type: 'offline',
             scope: 'https://www.googleapis.com/auth/userinfo.profile openid email',
             prompt: 'consent',
         })
-    
+
         res.json({ url: authorizeUrl })
-    }catch(err){res.json({err})}
+    } catch (err) { res.json({ err }) }
 })
 
 
-// redirectUrl : Route pour obtenir les infos du user
+// redirectUrl : Route pour obtenir de Google les infos du user
 
 router.get('/google/auth', async (req, res) => {
 
@@ -303,7 +318,6 @@ router.get('/google/auth', async (req, res) => {
 
         //Récupération des infos/credentials/tokens du user
         const user = oAuth2Client.credentials
-        console.log(user)
 
         //Récupération des infos du user grâce à son access_token
         const response = await fetch(`https://www.googleapis.com/oauth2/v3/userinfo`,
@@ -314,7 +328,6 @@ router.get('/google/auth', async (req, res) => {
             }
         )
         const data = await response.json()
-        console.log('data', data)
 
         let name
         if (data.family_name) { name = data.family_name }
@@ -327,10 +340,14 @@ router.get('/google/auth', async (req, res) => {
         }, secretToken, { expiresIn: '3h' })
 
         const result = await User.findOne({ email })
+
+        let emptyBasket = true
         // Si l'utilisateur se connecte
         if (result) {
             result.token = token
             await result.save()
+
+            if (result.cart_articles.length>0){emptyBasket=false}
         }
         // Si l'utilisateur s'inscrit
         else {
@@ -345,29 +362,25 @@ router.get('/google/auth', async (req, res) => {
             await newUser.save()
         }
 
-        res.redirect(`${frontAddress}/home/${jwtToken}`)
+        emptyBasket ? res.redirect(`${frontAddress}/home/${jwtToken}`) : res.redirect(`${frontAddress}/cart/g/${jwtToken}`)
 
 
     } catch (err) { console.log(err) }
 })
 
+
 // Route pour obtenir toutes les infos du user dans bdd en retour de connexion google
 
 router.put('/googleUserInfos', async (req, res) => {
-    const { jwtToken, articlesNotLinked } = req.body
+    const { jwtToken } = req.body
 
     try {
         const decryptedToken = jwt.verify(jwtToken, secretToken)
         const data = await User.findOne({ token: decryptedToken.token })
 
-        // Ajout d'articles présents dans le panier et non enregistrés
-        if (articlesNotLinked.length > 0) {
-            data.cart_articles = [...data.cart_articles, ...articlesNotLinked]
-        }
-
         // Vérif dispo articles du panier
         for (let article of data.cart_articles) {
-            const answer = await CartArticle.findOne({_id : article})
+            const answer = await CartArticle.findOne({ _id: article, user : data._id })
 
             if (answer == null) { data.cart_articles = data.cart_articles.filter(e => e !== article) }
         }
@@ -375,12 +388,12 @@ router.put('/googleUserInfos', async (req, res) => {
         const newData = await data.save()
         await newData.populate('cart_articles')
         await newData.populate('orders')
-        await newData.populate({path: 'orders', populate: {path:'articles'} })
+        await newData.populate({ path: 'orders', populate: { path: 'articles' } })
 
         let password
-        !newData.password ? password=false : password=true
+        !newData.password ? password = false : password = true
 
-        res.json({ result: true, token: jwtToken, firstname: newData.firstname, name : newData.name, email : newData.email, mobile_phone: newData.mobile_phone, is_admin: newData.is_admin, cart_articles: newData.cart_articles, addresses : newData.addresses, orders : newData.orders, password })
+        res.json({ result: true, token: jwtToken, firstname: newData.firstname, name: newData.name, email: newData.email, mobile_phone: newData.mobile_phone, is_admin: newData.is_admin, cart_articles: newData.cart_articles, addresses: newData.addresses, orders: newData.orders, password })
 
     } catch (err) { res.json({ result: false, err }) }
 })

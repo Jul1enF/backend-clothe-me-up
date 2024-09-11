@@ -45,13 +45,13 @@ router.put('/checkArticles', async (req, res) => {
         if (cart_articles.length > 0) {
             // Vérif présence dans la collection panier
             for (let article of cart_articles) {
-                const answer = await CartArticle.findOne({ _id: article._id })
+                const answer = await CartArticle.find({ _id: article._id })
 
-                // Sinon vérif dans le stock
-                if (answer == null) {
-                    const newAnswer = await Article.findOne({ _id: article._id })
+                // Si pas présent, vérif dans le stock
+                if (answer.length == 0) {
+                    const newAnswer = await Article.find({ _id: article._id })
                     // Si plus dans le stock
-                    if (newAnswer == null) {
+                    if (newAnswer.length == 0) {
                         badChange = true
                         data.cart_articles = data.cart_articles.filter(e => e !== article._id)
                         await data.save()
@@ -59,23 +59,32 @@ router.put('/checkArticles', async (req, res) => {
                     }
                     // Si encore dans le stock, remise dans panier
                     else {
-                        const id = newAnswer._id.toString()
+                        const id = newAnswer[0]._id.toString()
 
                         const newCartArticle = new CartArticle({
-                            name: newAnswer.name,
-                            size: newAnswer.size,
-                            imgUrl: newAnswer.imgUrl,
-                            price: newAnswer.price,
-                            category: newAnswer.category,
-                            description: newAnswer.description,
-                            arrival_date: newAnswer.arrival_date,
+                            name: newAnswer[0].name,
+                            size: newAnswer[0].size,
+                            imgUrl: newAnswer[0].imgUrl,
+                            price: newAnswer[0].price,
+                            category: newAnswer[0].category,
+                            description: newAnswer[0].description,
+                            arrival_date: newAnswer[0].arrival_date,
                             createdAt: new Date(),
-                            _id: new mongoose.Types.ObjectId(id)
+                            _id: new mongoose.Types.ObjectId(id),
+                            user: data._id
                         })
 
                         await newCartArticle.save()
                         change = true
                     }
+                }
+
+                // Si article présent dans la collection panier, vérif qu'il est bien attribué à l'utilisateur actuel
+                else if (!answer[0].user || answer[0].user.toString() !== data._id.toString()) {
+                    badChange = true
+                    data.cart_articles = data.cart_articles.filter(e => e !== article._id)
+                    await data.save()
+                    articlesRemoved.push(article._id)
                 }
             }
         }
@@ -103,18 +112,17 @@ router.put('/payOrder', async (req, res) => {
         // Vérif du token de l'utilisateur
         const decryptedToken = jwt.verify(jwtToken, secretToken)
         let data = await User.findOne({ token: decryptedToken.token })
-
         // Vérif articles
         if (cart_articles.length > 0) {
             // Vérif présence dans la collection panier
             for (let article of cart_articles) {
-                const answer = await CartArticle.findOne({ _id: article._id })
+                const answer = await CartArticle.find({ _id: article._id })
 
-                // Sinon vérif dans le stock
-                if (answer == null) {
-                    const newAnswer = await Article.findOne({ _id: article._id })
+                // Si pas présent, vérif dans le stock
+                if (answer.length == 0) {
+                    const newAnswer = await Article.find({ _id: article._id })
                     // Si plus dans le stock
-                    if (newAnswer == null) {
+                    if (newAnswer.length == 0) {
                         badChange = true
                         data.cart_articles = data.cart_articles.filter(e => e !== article._id)
                         await data.save()
@@ -122,22 +130,32 @@ router.put('/payOrder', async (req, res) => {
                     }
                     // Si encore dans le stock, remise dans panier
                     else {
-                        const id = newAnswer._id.toString()
+                        const id = newAnswer[0]._id.toString()
 
                         const newCartArticle = new CartArticle({
-                            name: newAnswer.name,
-                            size: newAnswer.size,
-                            imgUrl: newAnswer.imgUrl,
-                            price: newAnswer.price,
-                            category: newAnswer.category,
-                            description: newAnswer.description,
-                            arrival_date: newAnswer.arrival_date,
+                            name: newAnswer[0].name,
+                            size: newAnswer[0].size,
+                            imgUrl: newAnswer[0].imgUrl,
+                            price: newAnswer[0].price,
+                            category: newAnswer[0].category,
+                            description: newAnswer[0].description,
+                            arrival_date: newAnswer[0].arrival_date,
                             createdAt: new Date(),
-                            _id: new mongoose.Types.ObjectId(id)
+                            _id: new mongoose.Types.ObjectId(id),
+                            user: data._id
                         })
 
                         await newCartArticle.save()
+                        change = true
                     }
+                }
+
+                // Si article présent dans la collection panier, vérif qu'il est bien attribué à l'utilisateur actuel
+                else if (!answer[0].user || answer[0].user.toString() !== data._id.toString()) {
+                    badChange = true
+                    data.cart_articles = data.cart_articles.filter(e => e !== article._id)
+                    await data.save()
+                    articlesRemoved.push(article._id)
                 }
             }
         }
@@ -185,27 +203,27 @@ router.put('/payOrder', async (req, res) => {
 
 
         // Création des nouveaux document ordered_articles et suppression des documents correspondants dans cart_articles et articles
-        for (let article of cart_articles){
+        for (let article of cart_articles) {
 
-            const articleData = await CartArticle.findOne({_id : article._id})
+            const articleData = await CartArticle.findOne({ _id: article._id })
 
             const newOrderedArticle = new OrderedArticle({
-                name : articleData.name,
-                size : articleData.size,
-                imgUrl : articleData.imgUrl,
-                price : articleData.price,
-                category : articleData.category,
-                decription : articleData.description,
-                arrival_date : articleData.arrival_date,
-                createdAt : new Date(),
+                name: articleData.name,
+                size: articleData.size,
+                imgUrl: articleData.imgUrl,
+                price: articleData.price,
+                category: articleData.category,
+                decription: articleData.description,
+                arrival_date: articleData.arrival_date,
+                createdAt: new Date(),
             })
 
             const savedOrderedArticle = await newOrderedArticle.save()
 
             articles.push(savedOrderedArticle._id)
 
-            await CartArticle.deleteOne({_id: article._id})
-            await Article.deleteOne({_id: article._id})
+            await CartArticle.deleteOne({ _id: article._id })
+            await Article.deleteOne({ _id: article._id })
 
         }
 
@@ -215,31 +233,31 @@ router.put('/payOrder', async (req, res) => {
         // Recherche et actualisation du dernier num de commande
         let lastNum = 0
 
-        const dataOrderNumber = await OrderNumber.findOne({name: "Clothe me up"})
-     
-        lastNum+=dataOrderNumber.number
+        const dataOrderNumber = await OrderNumber.findOne({ name: "Clothe me up" })
 
-        dataOrderNumber.number+=1
+        lastNum += dataOrderNumber.number
+
+        dataOrderNumber.number += 1
         await dataOrderNumber.save()
 
         // Création du numéro de la commande actuelle
         const date = moment(new Date()).format('YYMMDDHHmm')
-        const dateAndNum = date+lastNum.toString()
+        const dateAndNum = date + lastNum.toString()
         const order_number = Number(dateAndNum)
 
 
         // Création d'un nouveau document collection orders
         const newOrder = new Order({
             order_number,
-            chosen_address : chosenAddress,
-            chosen_address2 : chosenAddress2,
-            delivery_mode : deliveryMode,
-            articles_price : totalArticles,
-            delivery_price : deliveryPrice,
-            total_price : total,
-            user : data._id,
+            chosen_address: chosenAddress,
+            chosen_address2: chosenAddress2,
+            delivery_mode: deliveryMode,
+            articles_price: totalArticles,
+            delivery_price: deliveryPrice,
+            total_price: total,
+            user: data._id,
             articles,
-            createdAt : new Date(),
+            createdAt: new Date(),
         })
 
         const newSavedOrder = await newOrder.save()
@@ -248,13 +266,13 @@ router.put('/payOrder', async (req, res) => {
 
         // Vidage du panier du user dans son document (cart_articles) et rattachement de l'id de sa commande
 
-        data.cart_articles=[]
+        data.cart_articles = []
         data.orders.push(newSavedOrder._id)
 
         await data.save()
 
         res.json({
-            result : true,
+            result: true,
             payment,
             newSavedOrder,
         })
@@ -263,9 +281,9 @@ router.put('/payOrder', async (req, res) => {
 
         // Envoi email de confirmation à l'utilisateur
 
-        let detailArticles=""
+        let detailArticles = ""
 
-        cart_articles.map(e=>detailArticles+= `<h2 style="width:100%; text-align:center; color:rgb(13,1, 102)">- ${e.name}, taille : ${e.size}, prix : ${e.price.toFixed(2)}€</h2>`)
+        cart_articles.map(e => detailArticles += `<h2 style="width:100%; text-align:center; color:rgb(13,1, 102)">- ${e.name}, taille : ${e.size}, prix : ${e.price.toFixed(2)}€</h2>`)
 
         const userConfirmartionEmail = {
             from: checkEmail,
@@ -294,22 +312,22 @@ router.put('/payOrder', async (req, res) => {
 
         // Envoi d'un mail pour signaler au backoffice qu'une commande a été passée
 
-        let addressToDeliver=""
-        if(chosenAddress2){
-            addressToDeliver=`<h2 style="width:100%; text-align:center; color:rgb(13,1, 102); padding-top:20px; text-decoration:underline">Adresse de livraison :</h2>
+        let addressToDeliver = ""
+        if (chosenAddress2) {
+            addressToDeliver = `<h2 style="width:100%; text-align:center; color:rgb(13,1, 102); padding-top:20px; text-decoration:underline">Adresse de livraison :</h2>
             <h2 style="width:100%; text-align:center; color:rgb(13,1, 102)">${chosenAddress2.title} : ${chosenAddress2.address} ${chosenAddress2.post_code} ${chosenAddress2.city}</h2>`
-        }else if (deliveryMode !== "Retrait en magasin"){
-            addressToDeliver=`<h2 style="width:100%; text-align:center; color:rgb(13,1, 102); padding-top:20px; text-decoration:underline">Adresse de livraison :</h2>
+        } else if (deliveryMode !== "Retrait en magasin") {
+            addressToDeliver = `<h2 style="width:100%; text-align:center; color:rgb(13,1, 102); padding-top:20px; text-decoration:underline">Adresse de livraison :</h2>
             <h2 style="width:100%; text-align:center; color:rgb(13,1, 102)">${chosenAddress.title} : ${chosenAddress.firstname} ${chosenAddress.name} ${chosenAddress.address} ${chosenAddress.post_code} ${chosenAddress.city}</h2>`
         }
 
         let client
-        if (data.name){
-            client=`  <h2 style="width:100%; text-align:center; color:rgb(13,1, 102)">${data.firstname} ${data.name} (${data.email})</h2>`
-        }else{
-            client=`  <h2 style="width:100%; text-align:center; color:rgb(13,1, 102)">${data.firstname} (${data.email})</h2>`
+        if (data.name) {
+            client = `  <h2 style="width:100%; text-align:center; color:rgb(13,1, 102)">${data.firstname} ${data.name} (${data.email})</h2>`
+        } else {
+            client = `  <h2 style="width:100%; text-align:center; color:rgb(13,1, 102)">${data.firstname} (${data.email})</h2>`
         }
-        
+
 
 
         const boConfirmartionEmail = {
@@ -337,7 +355,7 @@ router.put('/payOrder', async (req, res) => {
           </body>
           `
         }
-        
+
         await emailTransporter.sendMail(boConfirmartionEmail)
 
     } catch (err) { res.json({ err }) }

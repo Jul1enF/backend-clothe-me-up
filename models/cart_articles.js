@@ -9,6 +9,8 @@ const cartArticleSchema = mongoose.Schema({
     description: String,
     arrival_date : Date,
     createdAt : Date,
+    temporary_user : String,
+    user : { type: mongoose.Schema.Types.ObjectId, ref: 'users' },
 })
 
 const CartArticle = mongoose.model('cart_articles', cartArticleSchema)

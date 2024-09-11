@@ -27,8 +27,10 @@ router.get('/allArticles', async (req, res)=> {
 });
 
 router.put('/addCartArticle', async(req, res)=>{
-  const {jwtToken, _id}=req.body
+  
   try{
+    const {jwtToken, _id, temporaryToken}=req.body
+
     const article = await Article.findById(_id)
     const id = article._id.toString()
 
@@ -51,11 +53,23 @@ router.put('/addCartArticle', async(req, res)=>{
     if(jwtToken){
       const decryptedToken=jwt.verify(jwtToken, secretToken)
 
-      const answer = await User.updateOne({token : decryptedToken.token}, {$push : {cart_articles : cartArticleSaved._id}})
+      const userData = await User.findOne({token : decryptedToken.token})
+
+      userData.cart_articles.push(cartArticleSaved._id)
+
+      await userData.save()
+
+      cartArticleSaved.user = userData._id
+
+      await cartArticleSaved.save()
 
       res.json({result:true, cartArticleSaved})
     }
     else {
+      cartArticleSaved.temporary_user = temporaryToken
+
+      await cartArticleSaved.save()
+
       res.json({result:true, cartArticleSaved, noLink: cartArticleSaved._id})
     }
 
