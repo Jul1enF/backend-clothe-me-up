@@ -271,12 +271,6 @@ router.put('/payOrder', async (req, res) => {
 
         await data.save()
 
-        res.json({
-            result: true,
-            payment,
-            newSavedOrder,
-        })
-
 
 
         // Envoi email de confirmation à l'utilisateur
@@ -357,6 +351,13 @@ router.put('/payOrder', async (req, res) => {
         }
 
         await emailTransporter.sendMail(boConfirmartionEmail)
+
+        res.json({
+            result: true,
+            payment,
+            newSavedOrder,
+        })
+
 
     } catch (err) { res.json({ err }) }
 })
