@@ -54,6 +54,7 @@ router.put('/checkArticles', async (req, res) => {
                     if (newAnswer.length == 0) {
                         badChange = true
                         data.cart_articles = data.cart_articles.filter(e => e.toString() !== article._id)
+
                         await data.save()
                         articlesRemoved.push(article._id)
                     }
@@ -82,7 +83,7 @@ router.put('/checkArticles', async (req, res) => {
                 // Si article présent dans la collection panier, vérif qu'il est bien attribué à l'utilisateur actuel
                 else if (!answer[0].user || answer[0].user.toString() !== data._id.toString()) {
                     badChange = true
-                    data.cart_articles = data.cart_articles.filter(e => e !== article._id)
+                    data.cart_articles = data.cart_articles.filter(e => e.toString() !== article._id)
                     await data.save()
                     articlesRemoved.push(article._id)
                 }
@@ -153,7 +154,7 @@ router.put('/payOrder', async (req, res) => {
                 // Si article présent dans la collection panier, vérif qu'il est bien attribué à l'utilisateur actuel
                 else if (!answer[0].user || answer[0].user.toString() !== data._id.toString()) {
                     badChange = true
-                    data.cart_articles = data.cart_articles.filter(e => e !== article._id)
+                    data.cart_articles = data.cart_articles.filter(e => e.toString() !== article._id)
                     await data.save()
                     articlesRemoved.push(article._id)
                 }
@@ -252,7 +253,7 @@ router.put('/payOrder', async (req, res) => {
             chosen_address: chosenAddress,
             chosen_address2: chosenAddress2,
             delivery_mode: deliveryMode,
-            articles_price: totalArticles,
+            articles_price: totalArticles.toFixed(2),
             delivery_price: deliveryPrice,
             total_price: total.toFixed(2),
             user: data._id,
