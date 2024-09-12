@@ -82,7 +82,6 @@ router.delete('/deleteArticle/:_id/:jwtToken', async (req, res) => {
     try {
 
         const data = await CartArticle.deleteOne({ _id })
-        res.json({ result: true })
 
         if (jwtToken !== "none") {
             const decryptedToken = jwt.verify(jwtToken, secretToken)
@@ -92,6 +91,8 @@ router.delete('/deleteArticle/:_id/:jwtToken', async (req, res) => {
 
             await user.save()
         }
+
+        res.json({ result: true, data })
 
     } catch (err) { res.json({ err }) }
 })
