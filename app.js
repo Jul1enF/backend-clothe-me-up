@@ -15,12 +15,21 @@ var ordersRouter = require('./routes/orders')
 var deliveriesRouter = require('./routes/deliveries')
 
 var app = express();
+
 const cors = require('cors')
-const corsOptions = {
-    credentials: true,
-    origin: ['https://frontend-clothe-me-up.vercel.app/', 'https://backend-clothe-me-up.vercel.app/']
-}
-app.use(cors(corsOptions))
+
+app.use(cors({
+    origin: process.env.FRONT_ADDRESS,
+    methods: 'GET,POST,PUT,DELETE',
+    allowedHeaders: 'Content-Type,Authorization, ',
+    credentials: true
+}));
+
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    res.setHeader('Access-Control-Allow-Origin', process.env.FRONT_ADDRESS);
+    next()
+});
 
 app.use(logger('dev'));
 app.use(express.json());
