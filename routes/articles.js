@@ -6,9 +6,13 @@ const User = require('../models/users')
 const jwt = require('jsonwebtoken')
 const mongoose =require('mongoose')
 
+const connectionString = process.env.CONNECTION_STRING
+
 const secretToken = process.env.SECRET_TOKEN
 
 router.get('/allArticles', async (req, res)=> {
+  await mongoose.connect(connectionString, { connectTimeoutMS: 2000 })
+
   let articles = await Article.find()
   const cartArticles = await CartArticle.find()
 
@@ -26,7 +30,10 @@ router.get('/allArticles', async (req, res)=> {
   }
 });
 
+
+
 router.put('/addCartArticle', async(req, res)=>{
+  await mongoose.connect(connectionString, { connectTimeoutMS: 2000 })
   
   try{
     const {jwtToken, _id, temporaryToken}=req.body

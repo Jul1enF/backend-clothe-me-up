@@ -3,12 +3,19 @@ var router = express.Router();
 const Article = require('../models/articles')
 const User = require("../models/users")
 const jwt = require('jsonwebtoken')
+const mongoose =require('mongoose')
+
+const connectionString = process.env.CONNECTION_STRING
 
 const secretToken = process.env.SECRET_TOKEN
+
+
 
 // Checker si l'utilisateur est autorisé (admin)
 
 router.get('/checkUser/:jwtToken', async (req, res) => {
+  await mongoose.connect(connectionString, { connectTimeoutMS: 2000 })
+
   const { jwtToken } = req.params
 
   try {
@@ -35,6 +42,8 @@ router.get('/checkUser/:jwtToken', async (req, res) => {
 // Poster des articles
 
 router.post('/addArticles', async (req, res) => {
+  await mongoose.connect(connectionString, { connectTimeoutMS: 2000 })
+  
   const { jwtToken, name, imgUrl, price, description, category, size1, stock1, size2, stock2, size3, stock3, size4, stock4, size5, stock5, size6, stock6, size7, stock7, size8, stock8 } = req.body
 
   try {

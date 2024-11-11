@@ -10,6 +10,7 @@ const mongoose = require('mongoose')
 const jwt = require('jsonwebtoken')
 const moment = require('moment')
 
+const connectionString = process.env.CONNECTION_STRING
 const secretToken = process.env.SECRET_TOKEN
 
 const nodemailer = require("nodemailer")
@@ -31,6 +32,8 @@ const emailTransporter = nodemailer.createTransport({
 // Router pour vérifier avant paiement que les articles sont encore dans les collections panier et sinon en stock.
 
 router.put('/checkArticles', async (req, res) => {
+    await mongoose.connect(connectionString, { connectTimeoutMS: 2000 })
+
     const { cart_articles, jwtToken } = req.body
     try {
         let change = false
@@ -104,6 +107,8 @@ router.put('/checkArticles', async (req, res) => {
 
 
 router.put('/payOrder', async (req, res) => {
+    await mongoose.connect(connectionString, { connectTimeoutMS: 2000 })
+    
     const { cart_articles, jwtToken, totalArticles, deliveryPrice, total, chosenAddress, chosenAddress2, deliveryMode, CardNumber, CardMonth, CardYear, CardCVV, ClientIp } = req.body
 
     try {

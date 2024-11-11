@@ -4,6 +4,9 @@ const User = require("../models/users")
 const bcrypt = require('bcrypt')
 const uid2 = require('uid2')
 
+const mongoose =require('mongoose')
+const connectionString = process.env.CONNECTION_STRING
+
 const nodemailer = require("nodemailer")
 const checkEmail = process.env.CHECK_EMAIL
 const passwordCheckMail = process.env.PASSWORD_CHECK_EMAIL
@@ -28,6 +31,8 @@ const emailTransporter = nodemailer.createTransport({
 // Route pour ajouter une nouvelle adresse à un document users
 
 router.put('/addAddress', async (req, res) => {
+    await mongoose.connect(connectionString, { connectTimeoutMS: 2000 })
+
     const { title, name, firstname, address, additionals_intels, city, post_code, phone, jwtToken } = req.body
 
     try {
@@ -53,9 +58,13 @@ router.put('/addAddress', async (req, res) => {
     } catch (err) { res.json({ err }) }
 })
 
+
+
 // Route pour supprimer une adresse d'un document users
 
 router.delete('/deleteAddress/:_id/:jwtToken', async (req, res) => {
+    await mongoose.connect(connectionString, { connectTimeoutMS: 2000 })
+
     try {
         const { _id, jwtToken } = req.params
         const decryptedToken = jwt.verify(jwtToken, secretToken)
@@ -72,9 +81,12 @@ router.delete('/deleteAddress/:_id/:jwtToken', async (req, res) => {
 })
 
 
+
 // Route pour modifier le prénom d'un document users
 
 router.put('/newFirstname', async (req, res) => {
+    await mongoose.connect(connectionString, { connectTimeoutMS: 2000 })
+
     try {
         const { jwtToken, newFirstname } = req.body
 
@@ -90,9 +102,12 @@ router.put('/newFirstname', async (req, res) => {
 })
 
 
+
 // Route pour modifier le nom d'un document users
 
 router.put('/newName', async (req, res) => {
+    await mongoose.connect(connectionString, { connectTimeoutMS: 2000 })
+
     try {
         const { jwtToken, newName } = req.body
 
@@ -108,9 +123,12 @@ router.put('/newName', async (req, res) => {
 })
 
 
+
 // Route pour modifier le téléphone d'un document users
 
 router.put('/newPhone', async (req, res) => {
+    await mongoose.connect(connectionString, { connectTimeoutMS: 2000 })
+
     try {
         const { jwtToken, newPhone } = req.body
 
@@ -128,9 +146,12 @@ router.put('/newPhone', async (req, res) => {
 })
 
 
+
 // Route pour modifier le mot de passe d'un document users
 
 router.put('/newPassword', async (req, res) => {
+    await mongoose.connect(connectionString, { connectTimeoutMS: 2000 })
+
     try {
         const { jwtToken, newPassword, oldPassword } = req.body
 
@@ -162,9 +183,12 @@ router.put('/newPassword', async (req, res) => {
 
 
 
+
 // Route pour modifier l'email avec envoi mail de confirmation
 
 router.put('/newEmail', async (req, res) => {
+    await mongoose.connect(connectionString, { connectTimeoutMS: 2000 })
+
     try {
         const { actualJwtToken, newEmail } = req.body
         const token = uid2(32)

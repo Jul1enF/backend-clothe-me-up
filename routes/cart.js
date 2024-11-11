@@ -5,6 +5,9 @@ var User = require('../models/users')
 const CartArticle = require("../models/cart_articles")
 const uid2 = require('uid2')
 const jwt = require('jsonwebtoken')
+const mongoose =require('mongoose')
+
+const connectionString = process.env.CONNECTION_STRING
 
 const secretToken = process.env.SECRET_TOKEN
 
@@ -19,6 +22,8 @@ const { OAuth2Client } = require('google-auth-library')
 // Route pour vérifier que les articles du panier sont toujours dedans
 
 router.put('/checkArticles', async (req, res) => {
+    await mongoose.connect(connectionString, { connectTimeoutMS: 2000 })
+
     let { cart_articles, jwtToken, articlesNotLinked, temporaryToken } = req.body
 
     try {
@@ -78,6 +83,8 @@ router.put('/checkArticles', async (req, res) => {
 // Route pour supprimer du panier un article
 
 router.delete('/deleteArticle/:_id/:jwtToken', async (req, res) => {
+    await mongoose.connect(connectionString, { connectTimeoutMS: 2000 })
+
     let { _id, jwtToken } = req.params
     try {
 
@@ -105,6 +112,7 @@ router.delete('/deleteArticle/:_id/:jwtToken', async (req, res) => {
 // 1ère route pour avoir une url de connexion google
 
 router.post('/google', async (req, res) => {
+
     res.header('Access-Control-Allow-Origin', `${frontAddress}`)
 
     // Pour autoriser l'utilisation de http ou lieu de https
@@ -133,6 +141,7 @@ router.post('/google', async (req, res) => {
 // redirectUrl : Route pour obtenir de google les infos du user
 
 router.get('/google/auth', async (req, res) => {
+    await mongoose.connect(connectionString, { connectTimeoutMS: 2000 })
 
     //Récupération du code fourni par google
     const { code } = req.query
@@ -202,6 +211,8 @@ router.get('/google/auth', async (req, res) => {
 // Route de récupération des infos du user google
 
 router.put('/googleUserInfos', async (req, res) => {
+    await mongoose.connect(connectionString, { connectTimeoutMS: 2000 })
+    
     const { jwtToken, articlesNotLinked, temporaryToken } = req.body
 
     try {

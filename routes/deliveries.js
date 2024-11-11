@@ -5,9 +5,11 @@ let xmlParser = require('xml2json')
 var convert = require('xml-js');
 const uid2 = require('uid2')
 
+
 router.post('/pickups', async (req, res) => {
 
     try {
+
     const { address, city, post_code } = req.body.chosenAddress
     
     const cityWithoutSpaces = city.replace(/ /g, "-")

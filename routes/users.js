@@ -8,6 +8,9 @@ const uid2 = require('uid2')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const nodemailer = require("nodemailer")
+const mongoose =require('mongoose')
+
+const connectionString = process.env.CONNECTION_STRING
 
 const checkEmail = process.env.CHECK_EMAIL
 const passwordCheckMail = process.env.PASSWORD_CHECK_EMAIL
@@ -54,9 +57,12 @@ const checkMail = (jwtToken, email, firstname) => {
     return mailOptions
 }
 
+
+
 // Route Signup
 
 router.post('/signup', async (req, res) => {
+    await mongoose.connect(connectionString, { connectTimeoutMS: 2000 })
 
     const { firstname, name, email, password, mobile_phone } = req.body
 
@@ -107,9 +113,15 @@ router.post('/signup', async (req, res) => {
     } catch (err) { res.json({ err }) }
 })
 
+
+
+
+
 // Route de vérification de l'email
 
 router.put('/verification', async (req, res) => {
+    await mongoose.connect(connectionString, { connectTimeoutMS: 2000 })
+
     try {
         const { email, jwtToken, articlesNotLinked, temporaryToken } = req.body
         const decryptedToken = jwt.verify(jwtToken, secretToken)
@@ -182,9 +194,13 @@ router.put('/verification', async (req, res) => {
 })
 
 
+
+
 // Route signin
 
 router.put('/signin', async (req, res) => {
+    await mongoose.connect(connectionString, { connectTimeoutMS: 2000 })
+
     const { email, password, articlesNotLinked, temporaryToken } = req.body
 
     try {
@@ -299,9 +315,11 @@ router.post('/google', async (req, res) => {
 })
 
 
+
 // redirectUrl : Route pour obtenir de Google les infos du user
 
 router.get('/google/auth', async (req, res) => {
+    await mongoose.connect(connectionString, { connectTimeoutMS: 2000 })
 
     //Récupération du code fourni par google
     const { code } = req.query
@@ -371,9 +389,12 @@ router.get('/google/auth', async (req, res) => {
 })
 
 
+
 // Route pour obtenir toutes les infos du user dans bdd en retour de connexion google
 
 router.put('/googleUserInfos', async (req, res) => {
+    await mongoose.connect(connectionString, { connectTimeoutMS: 2000 })
+    
     const { jwtToken } = req.body
 
     try {
