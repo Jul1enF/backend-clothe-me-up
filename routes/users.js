@@ -288,7 +288,9 @@ router.post('/google', async (req, res) => {
 
             // Pour avoir un nouveau token à chaque fois
             access_type: 'offline',
+            // Scope des infos que l'on veut récupérer
             scope: 'https://www.googleapis.com/auth/userinfo.profile openid email',
+            // Pour redemander quelle session google l'utilisateur veut utiliser à chacune de ses connexions
             prompt: 'consent',
         })
 
